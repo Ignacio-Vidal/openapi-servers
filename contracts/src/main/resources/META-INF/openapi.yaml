@@ -1,0 +1,257 @@
+openapi: "3.1.1"
+info:
+  title: Pet API
+  version: "1.0.0"
+  description: API for creating pets supporting cats and dogs
+
+paths:
+  /pets:
+    post:
+      summary: Create a pet
+      operationId: createPet
+      tags:
+        - Pets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PetRequest"
+            examples:
+              cat:
+                summary: Cat request
+                value:
+                  petType: CAT
+                  name: "Whiskers"
+                  indoor: true
+                  breedType: DOMESTIC_SHORTHAIR
+              dog:
+                summary: Dog request
+                value:
+                  petType: DOG
+                  name: "Buddy"
+                  breedType: LABRADOR
+                  trained: true
+      responses:
+        '201':
+          description: Pet created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PetResponse'
+              examples:
+                cat:
+                  summary: Cat response
+                  value:
+                    id: "pet_01HQ7CAT123456789"
+                    petType: CAT
+                    name: "Whiskers"
+                    indoor: true
+                    breedType: DOMESTIC_SHORTHAIR
+                    createdAt: "2024-02-01T10:30:00Z"
+                dog:
+                  summary: Dog response
+                  value:
+                    id: "pet_01HQ7DOG987654321"
+                    petType: DOG
+                    name: "Buddy"
+                    breedType: LABRADOR
+                    trained: true
+                    createdAt: "2024-02-01T10:30:00Z"
+
+components:
+  schemas:
+
+    # -----------------------------------------------
+    # Shared enum
+    # -----------------------------------------------
+
+    PetType:
+      type: string
+      enum:
+        - CAT
+        - DOG
+      description: Discriminator field identifying the type of pet
+
+    CatBreedType:
+      type: string
+      enum:
+        - DOMESTIC_SHORTHAIR
+        - PERSIAN
+        - MAINE_COON
+        - SIAMESE
+        - BENGAL
+      description: Breed of the cat
+
+    DogBreedType:
+      type: string
+      enum:
+        - LABRADOR
+        - GOLDEN_RETRIEVER
+        - BULLDOG
+        - POODLE
+        - GERMAN_SHEPHERD
+      description: Breed of the dog
+
+    # -----------------------------------------------
+    # Request base schema
+    # Discriminator lives here on the parent so the
+    # openapi generator produces correct Java
+    # inheritance with extends rather than flattening
+    # -----------------------------------------------
+
+    PetRequest:
+      type: object
+      required:
+        - petType
+        - name
+      properties:
+        petType:
+          $ref: '#/components/schemas/PetType'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Name of the pet
+          examples:
+            - "Whiskers"
+      discriminator:
+        propertyName: petType
+        mapping:
+          CAT: '#/components/schemas/CatRequest'
+          DOG: '#/components/schemas/DogRequest'
+
+    # -----------------------------------------------
+    # Response base schema
+    # Discriminator also lives here on the parent
+    # -----------------------------------------------
+
+    PetResponse:
+      type: object
+      required:
+        - petType
+      properties:
+        petType:
+          $ref: '#/components/schemas/PetType'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Name of the pet
+          examples:
+            - "Whiskers"
+      discriminator:
+        propertyName: petType
+        mapping:
+          CAT: '#/components/schemas/CatResponse'
+          DOG: '#/components/schemas/DogResponse'
+
+    # -----------------------------------------------
+    # Cat request - child references parent via allOf
+    # -----------------------------------------------
+
+    CatRequest:
+      description: Request payload for creating a cat
+      allOf:
+        - $ref: '#/components/schemas/PetRequest'
+        - type: object
+          required:
+            - breedType
+            - indoor
+          properties:
+            breedType:
+              $ref: '#/components/schemas/CatBreedType'
+            indoor:
+              type: boolean
+              description: Whether the cat is an indoor cat
+              examples:
+                - true
+            declawed:
+              type: boolean
+              description: Whether the cat has been declawed
+              examples:
+                - false
+
+    # -----------------------------------------------
+    # Dog request - child references parent via allOf
+    # -----------------------------------------------
+
+    DogRequest:
+      description: Request payload for creating a dog
+      allOf:
+        - $ref: '#/components/schemas/PetRequest'
+        - type: object
+          required:
+            - breedType
+            - trained
+          properties:
+            breedType:
+              $ref: '#/components/schemas/DogBreedType'
+            trained:
+              type: boolean
+              description: Whether the dog is house trained
+              examples:
+                - true
+            weightKg:
+              type: number
+              format: double
+              minimum: 0.1
+              maximum: 120.0
+              description: Weight of the dog in kilograms
+              examples:
+                - 30.5
+
+    # -----------------------------------------------
+    # Cat response - child references parent via allOf
+    # -----------------------------------------------
+
+    CatResponse:
+      description: Response payload for a cat resource
+      allOf:
+        - $ref: '#/components/schemas/PetResponse'
+        - type: object
+          required:
+            - breedType
+            - indoor
+          properties:
+            breedType:
+              $ref: '#/components/schemas/CatBreedType'
+            indoor:
+              type: boolean
+              description: Whether the cat is an indoor cat
+              examples:
+                - true
+            declawed:
+              type: boolean
+              description: Whether the cat has been declawed
+              examples:
+                - false
+
+    # -----------------------------------------------
+    # Dog response - child references parent via allOf
+    # -----------------------------------------------
+
+    DogResponse:
+      description: Response payload for a dog resource
+      allOf:
+        - $ref: '#/components/schemas/PetResponse'
+        - type: object
+          required:
+            - breedType
+            - trained
+          properties:
+            breedType:
+              $ref: '#/components/schemas/DogBreedType'
+            trained:
+              type: boolean
+              description: Whether the dog is house trained
+              examples:
+                - true
+            weightKg:
+              type: number
+              format: double
+              minimum: 0.1
+              maximum: 120.0
+              description: Weight of the dog in kilograms
+              examples:
+                - 30.5
