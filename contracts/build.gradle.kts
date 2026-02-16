@@ -23,6 +23,7 @@ dependencies {
     implementation("io.swagger.core.v3:swagger-annotations:2.2.42")
     implementation("org.springframework:spring-web:7.0.4")
     implementation("org.springframework:spring-context:7.0.4")
+    compileOnly("jakarta.servlet:jakarta.servlet-api:6.1.0")
 }
 
 val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
@@ -136,14 +137,47 @@ val generateSpringBootServer = tasks.register("generateSpringBootServer", org.op
     )
 }
 
+val generateSpringBootClient = tasks.register("generateSpringBootClient", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
+    group = "openapi tools"
+    description = "Generates a Spring Boot REST client."
+    generatorName.set("java")
 
+    inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
+    outputDir.set("${layout.buildDirectory.get()}/generated-sources/openapi/springboot-client")
+
+    apiPackage.set("com.example.openapi.springboot.client.api")
+    modelPackage.set("com.example.openapi.springboot.client.model")
+    invokerPackage.set("com.example.openapi.springboot.client")
+
+    generateModelTests.set(false)
+    generateApiTests.set(false)
+
+    configOptions.set(
+        mapOf(
+            "annotationLibrary" to "swagger2",
+            "bigDecimalAsString" to "true",
+            "dateLibrary" to "java8",
+            "disallowAdditionalPropertiesIfNotPresent" to "false",
+            "discriminatorCaseSensitive" to "true",
+            "generateConstructorWithAllArgs" to "true",
+            "implicitHeaders" to "true",
+            "legacyDiscriminatorBehavior" to "false",
+            "library" to "restclient",
+            "openApiNullable" to "false",
+            "serializationLibrary" to "jackson",
+            "serializableModel" to "false",
+            "useBeanValidation" to "true",
+            "useJakartaEe" to "true",
+        )
+    )
+}
 
 tasks.named("jandex") {
     dependsOn(generateQuarkusServer, generateQuarkusClient)
 }
 
 tasks.named("compileJava") {
-    dependsOn(generateQuarkusServer, generateQuarkusClient, generateSpringBootServer)
+    dependsOn(generateQuarkusServer, generateQuarkusClient, generateSpringBootServer, generateSpringBootClient)
 }
 
 sourceSets{
@@ -152,6 +186,7 @@ sourceSets{
             srcDir(layout.buildDirectory.dir("generated-sources/openapi/quarkus-server/src/gen/java"))
             srcDir(layout.buildDirectory.dir("generated-sources/openapi/quarkus-client/src/main/java"))
             srcDir(layout.buildDirectory.dir("generated-sources/openapi/springboot-server/src/main/java"))
+            srcDir(layout.buildDirectory.dir("generated-sources/openapi/springboot-client/src/main/java"))
 
         }
     }
