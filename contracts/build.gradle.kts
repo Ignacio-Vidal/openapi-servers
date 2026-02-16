@@ -19,18 +19,18 @@ dependencies {
     implementation("io.quarkus:quarkus-rest-jackson")
     implementation("io.quarkus:quarkus-hibernate-validator")
     implementation("com.fasterxml.jackson.core:jackson-annotations")
-
+    implementation("org.eclipse.microprofile.rest.client:microprofile-rest-client-api:3.0")
 }
 
-openApiGenerate {
+val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
     group= "openapi tools"
     description = "Generates OpenAPI server stubs using the JAX-RS specification for Quarkus."
     generatorName.set("jaxrs-spec")
 
     inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
-    outputDir.set("$buildDir/generated-sources/openapi/quarkus")
-    apiPackage.set("com.example.openapi.quarkus.api")
-    modelPackage.set("com.example.openapi.quarkus.model")
+    outputDir.set("$buildDir/generated-sources/openapi/quarkus-server")
+    apiPackage.set("com.example.openapi.quarkus.server.api")
+    modelPackage.set("com.example.openapi.quarkus.server.model")
 
     configOptions.set(
         mapOf(
@@ -50,23 +50,64 @@ openApiGenerate {
             "useJakartaEe" to "true",
             "useMicroProfileOpenAPIAnnotations" to "true",
             "useSwaggerAnnotations" to "false",
-            "useTags" to "true",
+            "useTags" to "true"
+        )
+    )
+}
+
+val generateQuarkusClient = tasks.register("generateQuarkusClient", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
+    group = "openapi tools"
+    description = "Generates a MicroProfile REST client for Quarkus."
+    generatorName.set("java")
+
+    inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
+    outputDir.set("${layout.buildDirectory.get()}/generated-sources/openapi/quarkus-client")
+
+    // Separate packages so server and client classes never clash
+    apiPackage.set("com.example.openapi.quarkus.client.api")
+    modelPackage.set("com.example.openapi.quarkus.client.model")
+    invokerPackage.set("com.example.openapi.quarkus.client")
+
+    configOptions.set(
+        mapOf(
+            // microprofile library generates a @RegisterRestClient interface
+            // which Quarkus picks up natively with quarkus-rest-client
+            "library" to "microprofile",
+
+            // Quarkus MicroProfile Rest Client version
+            "microprofileRestClientVersion" to "3.0",
+
+            "dateLibrary" to "java8",
+            "useJakartaEe" to "true",
+            "useBeanValidation" to "true",
+            "openApiNullable" to "false",
+            "disallowAdditionalPropertiesIfNotPresent" to "false",
+            "legacyDiscriminatorBehavior" to "false",
+            "discriminatorCaseSensitive" to "true",
+            "generateConstructorWithAllArgs" to "true",
+            "serializableModel" to "false",
+            "bigDecimalAsString" to "true",
+            "implicitHeaders" to "true",
+            "annotationLibrary" to "none",
+            "serializationLibrary" to "jackson",
+            "useOneOfDiscriminatorLookup" to "false"
         )
     )
 }
 
 tasks.named("jandex") {
-    dependsOn("openApiGenerate")
+    dependsOn(generateQuarkusServer, generateQuarkusClient)
 }
 
 tasks.named("compileJava") {
-    dependsOn("openApiGenerate")
+    dependsOn(generateQuarkusServer, generateQuarkusClient)
 }
 
 sourceSets{
     main {
         java {
-            srcDir(layout.buildDirectory.dir("generated-sources/openapi/quarkus/src/gen/java"))
+            srcDir(layout.buildDirectory.dir("generated-sources/openapi/quarkus-server/src/gen/java"))
+            srcDir(layout.buildDirectory.dir("generated-sources/openapi/quarkus-client/src/main/java"))
         }
     }
 }

@@ -16,6 +16,7 @@ paths:
         content:
           application/json:
             schema:
+              title: PetRequest
               $ref: "#/components/schemas/PetRequest"
             examples:
               cat:
@@ -151,6 +152,8 @@ components:
     # -----------------------------------------------
 
     CatRequest:
+      type: object
+      x-discriminator-value: CAT   # <- controls generated @JsonTypeName / discriminator value
       description: Request payload for creating a cat
       allOf:
         - $ref: '#/components/schemas/PetRequest'
@@ -177,6 +180,8 @@ components:
     # -----------------------------------------------
 
     DogRequest:
+      type: object
+      x-discriminator-value: DOG
       description: Request payload for creating a dog
       allOf:
         - $ref: '#/components/schemas/PetRequest'
@@ -206,6 +211,8 @@ components:
     # -----------------------------------------------
 
     CatResponse:
+      type: object
+      x-discriminator-value: CAT
       description: Response payload for a cat resource
       allOf:
         - $ref: '#/components/schemas/PetResponse'
@@ -232,6 +239,8 @@ components:
     # -----------------------------------------------
 
     DogResponse:
+      type: object
+      x-discriminator-value: DOG
       description: Response payload for a dog resource
       allOf:
         - $ref: '#/components/schemas/PetResponse'

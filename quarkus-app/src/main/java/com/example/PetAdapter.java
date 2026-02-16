@@ -1,7 +1,7 @@
 package com.example;
 
-import com.example.openapi.quarkus.api.PetsApi;
-import com.example.openapi.quarkus.model.*;
+import com.example.openapi.quarkus.server.api.PetsApi;
+import com.example.openapi.quarkus.server.model.*;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.enterprise.context.ApplicationScoped;
 
