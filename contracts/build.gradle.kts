@@ -40,6 +40,7 @@ val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapit
         mapOf(
             "bigDecimalAsString" to "true",
             "dateLibrary" to "java8",
+            "disableDiscriminatorJsonIgnoreProperties" to "true",
             "disallowAdditionalPropertiesIfNotPresent" to "false",
             "discriminatorCaseSensitive" to "true",
             "generateConstructorWithAllArgs" to "true",
