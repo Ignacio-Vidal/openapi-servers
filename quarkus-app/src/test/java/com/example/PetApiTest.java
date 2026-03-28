@@ -34,16 +34,15 @@ class PetApiTest {
         PetRequest request = new CatRequest()
                 .breedType(CatBreedType.SIAMESE)
                 .indoor(true)
-                .declawed(false)
                 .name("Whiskers")
-                .petType(PetType.CAT);
+                .petType(PetRequest.PetTypeEnum.CAT_REQUEST);
 
 
         var response = petsApi.createPet(request);
 
         assertNotNull(response);
         assertInstanceOf(CatResponse.class, response);
-        assertEquals(PetType.CAT, response.getPetType());
+        assertEquals(PetResponse.PetTypeEnum.CAT_RESPONSE, response.getPetType());
     }
 
     @Test
@@ -53,12 +52,12 @@ class PetApiTest {
                 .trained(true)
                 .weightKg(100.0)
                 .name("Rover")
-                .petType(PetType.DOG);
+                .petType(PetRequest.PetTypeEnum.DOG_REQUEST);
 
         var response = petsApi.createPet(request);
 
         assertNotNull(response);
         assertInstanceOf(DogResponse.class, response);
-        assertEquals(PetType.DOG, response.getPetType());
+        assertEquals(PetResponse.PetTypeEnum.DOG_RESPONSE, response.getPetType());
     }
 }

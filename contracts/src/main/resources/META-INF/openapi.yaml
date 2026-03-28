@@ -70,8 +70,8 @@ components:
     PetType:
       type: string
       enum:
-        - CAT
-        - DOG
+        - CatRequest
+        - DogRequest
       description: Discriminator field identifying the type of pet
 
     CatBreedType:
@@ -108,7 +108,10 @@ components:
         - name
       properties:
         petType:
-          $ref: '#/components/schemas/PetType'
+          type: string
+          enum:
+            - CatRequest
+            - DogRequest
         name:
           type: string
           minLength: 1
@@ -119,8 +122,8 @@ components:
       discriminator:
         propertyName: petType
         mapping:
-          CAT: '#/components/schemas/CatRequest'
-          DOG: '#/components/schemas/DogRequest'
+          CatRequest: '#/components/schemas/CatRequest'
+          DogRequest: '#/components/schemas/DogRequest'
 
     # -----------------------------------------------
     # Response base schema
@@ -133,7 +136,10 @@ components:
         - petType
       properties:
         petType:
-          $ref: '#/components/schemas/PetType'
+          type: string
+          enum:
+            - CatResponse
+            - DogResponse
         name:
           type: string
           minLength: 1
@@ -144,8 +150,8 @@ components:
       discriminator:
         propertyName: petType
         mapping:
-          CAT: '#/components/schemas/CatResponse'
-          DOG: '#/components/schemas/DogResponse'
+          CatResponse: '#/components/schemas/CatResponse'
+          DogResponse: '#/components/schemas/DogResponse'
 
     # -----------------------------------------------
     # Cat request - child references parent via allOf
@@ -153,7 +159,6 @@ components:
 
     CatRequest:
       type: object
-      x-discriminator-value: CAT   # <- controls generated @JsonTypeName / discriminator value
       description: Request payload for creating a cat
       allOf:
         - $ref: '#/components/schemas/PetRequest'
@@ -181,7 +186,6 @@ components:
 
     DogRequest:
       type: object
-      x-discriminator-value: DOG
       description: Request payload for creating a dog
       allOf:
         - $ref: '#/components/schemas/PetRequest'
@@ -212,7 +216,6 @@ components:
 
     CatResponse:
       type: object
-      x-discriminator-value: CAT
       description: Response payload for a cat resource
       allOf:
         - $ref: '#/components/schemas/PetResponse'
@@ -240,7 +243,6 @@ components:
 
     DogResponse:
       type: object
-      x-discriminator-value: DOG
       description: Response payload for a dog resource
       allOf:
         - $ref: '#/components/schemas/PetResponse'
