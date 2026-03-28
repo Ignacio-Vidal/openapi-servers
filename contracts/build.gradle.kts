@@ -40,7 +40,7 @@ val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapit
         mapOf(
             "bigDecimalAsString" to "true",
             "dateLibrary" to "java8",
-            "disableDiscriminatorJsonIgnoreProperties" to "true",
+            "disableDiscriminatorJsonIgnoreProperties" to "false",
             "disallowAdditionalPropertiesIfNotPresent" to "false",
             "discriminatorCaseSensitive" to "true",
             "generateConstructorWithAllArgs" to "true",
@@ -80,7 +80,7 @@ val generateQuarkusClient = tasks.register("generateQuarkusClient", org.openapit
 
             // Quarkus MicroProfile Rest Client version
             "microprofileRestClientVersion" to "3.0",
-
+            "disableDiscriminatorJsonIgnoreProperties" to "false",
             "dateLibrary" to "java8",
             "useJakartaEe" to "true",
             "useBeanValidation" to "true",
@@ -98,87 +98,89 @@ val generateQuarkusClient = tasks.register("generateQuarkusClient", org.openapit
         )
     )
 }
-
-val generateSpringBootServer = tasks.register("generateSpringBootServer", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
-    group = "openapi tools"
-    description = "Generates OpenAPI server stubs using Spring Boot 4 and Spring 7."
-    generatorName.set("spring")
-
-    inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
-    outputDir.set("$buildDir/generated-sources/openapi/springboot-server")
-    apiPackage.set("com.example.openapi.springboot.server.api")
-    modelPackage.set("com.example.openapi.springboot.server.model")
-
-    configOptions.set(
-        mapOf(
-            "generateSupportingFiles" to "false",
-            "generateApis" to "true",
-            "generateModels" to "true",
-            "annotationLibrary" to "swagger2",
-            "bigDecimalAsString" to "true",
-            "dateLibrary" to "java8",
-            "disallowAdditionalPropertiesIfNotPresent" to "false",
-            "discriminatorCaseSensitive" to "true",
-            "documentationProvider" to "springdoc",
-            "generateConstructorWithAllArgs" to "true",
-            "implicitHeaders" to "true",
-            "interfaceOnly" to "true",
-            "legacyDiscriminatorBehavior" to "false",
-            "library" to "spring-boot",
-            "openApiNullable" to "false",
-            "requestMappingMode" to "api_interface",
-            "serializableModel" to "false",
-            "useSwaggerAnnotations" to "false",
-            "useJakartaEe" to "true",
-            "useBeanValidation" to "true",
-            "useResponseEntity" to "false",
-            "useSpringBoot3" to "true",
-            "useTags" to "true",
-        )
-    )
-}
-
-val generateSpringBootClient = tasks.register("generateSpringBootClient", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
-    group = "openapi tools"
-    description = "Generates a Spring Boot REST client."
-    generatorName.set("java")
-
-    inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
-    outputDir.set("${layout.buildDirectory.get()}/generated-sources/openapi/springboot-client")
-
-    apiPackage.set("com.example.openapi.springboot.client.api")
-    modelPackage.set("com.example.openapi.springboot.client.model")
-    invokerPackage.set("com.example.openapi.springboot.client")
-
-    generateModelTests.set(false)
-    generateApiTests.set(false)
-
-    configOptions.set(
-        mapOf(
-            "annotationLibrary" to "swagger2",
-            "bigDecimalAsString" to "true",
-            "dateLibrary" to "java8",
-            "disallowAdditionalPropertiesIfNotPresent" to "false",
-            "discriminatorCaseSensitive" to "true",
-            "generateConstructorWithAllArgs" to "true",
-            "implicitHeaders" to "true",
-            "legacyDiscriminatorBehavior" to "false",
-            "library" to "restclient",
-            "openApiNullable" to "false",
-            "serializationLibrary" to "jackson",
-            "serializableModel" to "false",
-            "useBeanValidation" to "true",
-            "useJakartaEe" to "true",
-        )
-    )
-}
+//
+//val generateSpringBootServer = tasks.register("generateSpringBootServer", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
+//    group = "openapi tools"
+//    description = "Generates OpenAPI server stubs using Spring Boot 4 and Spring 7."
+//    generatorName.set("spring")
+//
+//    inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
+//    outputDir.set("$buildDir/generated-sources/openapi/springboot-server")
+//    apiPackage.set("com.example.openapi.springboot.server.api")
+//    modelPackage.set("com.example.openapi.springboot.server.model")
+//
+//    configOptions.set(
+//        mapOf(
+//            "generateSupportingFiles" to "false",
+//            "generateApis" to "true",
+//            "generateModels" to "true",
+//            "annotationLibrary" to "swagger2",
+//            "bigDecimalAsString" to "true",
+//            "dateLibrary" to "java8",
+//            "disallowAdditionalPropertiesIfNotPresent" to "false",
+//            "discriminatorCaseSensitive" to "true",
+//            "documentationProvider" to "springdoc",
+//            "generateConstructorWithAllArgs" to "true",
+//            "implicitHeaders" to "true",
+//            "interfaceOnly" to "true",
+//            "legacyDiscriminatorBehavior" to "false",
+//            "library" to "spring-boot",
+//            "openApiNullable" to "false",
+//            "requestMappingMode" to "api_interface",
+//            "serializableModel" to "false",
+//            "useSwaggerAnnotations" to "false",
+//            "useJakartaEe" to "true",
+//            "useBeanValidation" to "true",
+//            "useResponseEntity" to "false",
+//            "useSpringBoot3" to "true",
+//            "useTags" to "true",
+//        )
+//    )
+//}
+//
+//val generateSpringBootClient = tasks.register("generateSpringBootClient", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
+//    group = "openapi tools"
+//    description = "Generates a Spring Boot REST client."
+//    generatorName.set("java")
+//
+//    inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
+//    outputDir.set("${layout.buildDirectory.get()}/generated-sources/openapi/springboot-client")
+//
+//    apiPackage.set("com.example.openapi.springboot.client.api")
+//    modelPackage.set("com.example.openapi.springboot.client.model")
+//    invokerPackage.set("com.example.openapi.springboot.client")
+//
+//    generateModelTests.set(false)
+//    generateApiTests.set(false)
+//
+//    configOptions.set(
+//        mapOf(
+//            "annotationLibrary" to "swagger2",
+//            "bigDecimalAsString" to "true",
+//            "dateLibrary" to "java8",
+//            "disallowAdditionalPropertiesIfNotPresent" to "false",
+//            "discriminatorCaseSensitive" to "true",
+//            "generateConstructorWithAllArgs" to "true",
+//            "implicitHeaders" to "true",
+//            "legacyDiscriminatorBehavior" to "false",
+//            "library" to "restclient",
+//            "openApiNullable" to "false",
+//            "serializationLibrary" to "jackson",
+//            "serializableModel" to "false",
+//            "useBeanValidation" to "true",
+//            "useJakartaEe" to "true",
+//        )
+//    )
+//}
 
 tasks.named("jandex") {
     dependsOn(generateQuarkusServer, generateQuarkusClient)
 }
 
 tasks.named("compileJava") {
-    dependsOn(generateQuarkusServer, generateQuarkusClient, generateSpringBootServer, generateSpringBootClient)
+    dependsOn(generateQuarkusServer, generateQuarkusClient
+//        , generateSpringBootServer, generateSpringBootClient
+    )
 }
 
 sourceSets{

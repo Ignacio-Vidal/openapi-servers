@@ -160,6 +160,11 @@ components:
     CatRequest:
       type: object
       description: Request payload for creating a cat
+      required:
+        - petType
+        - name
+        - breedType
+        - indoor
       allOf:
         - $ref: '#/components/schemas/PetRequest'
         - type: object
@@ -187,6 +192,11 @@ components:
     DogRequest:
       type: object
       description: Request payload for creating a dog
+      required:
+        - petType
+        - name
+        - breedType
+        - trained
       allOf:
         - $ref: '#/components/schemas/PetRequest'
         - type: object

@@ -5,6 +5,7 @@ import com.example.openapi.quarkus.client.api.PetsApi;
 import com.example.openapi.quarkus.client.model.*;
 import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 import io.quarkus.vertx.runtime.jackson.QuarkusJacksonJsonCodec;
+import jakarta.ws.rs.BadRequestException;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.internal.ResteasyClientBuilderImpl;
@@ -38,12 +39,31 @@ class PetApiTest {
                 .petType(PetRequest.PetTypeEnum.CAT_REQUEST);
 
 
-        var response = petsApi.createPet(request);
+        PetResponse response = petsApi.createPet(request);
 
         assertNotNull(response);
         assertInstanceOf(CatResponse.class, response);
         assertEquals(PetResponse.PetTypeEnum.CAT_RESPONSE, response.getPetType());
     }
+
+    @Test
+    void shouldFailForMissingCatProperty(){
+        PetRequest request = new CatRequest()
+                .petType(PetRequest.PetTypeEnum.CAT_REQUEST);
+
+        assertThrows(BadRequestException.class, () -> petsApi.createPet(request));
+    }
+
+    @Test
+    void shouldFailForMissingDiscriminator() throws ApiException {
+        PetRequest request = new CatRequest()
+                .breedType(CatBreedType.BENGAL)
+                .indoor(true)
+                .name("Whiskers");
+
+        PetResponse response = petsApi.createPet(request);
+    }
+
 
     @Test
     void createDog_shouldReturnDogResponse() throws ApiException {
@@ -60,4 +80,6 @@ class PetApiTest {
         assertInstanceOf(DogResponse.class, response);
         assertEquals(PetResponse.PetTypeEnum.DOG_RESPONSE, response.getPetType());
     }
+
+
 }

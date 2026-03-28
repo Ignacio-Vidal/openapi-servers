@@ -14,6 +14,7 @@ dependencies {
     implementation("io.quarkus:quarkus-arc")
     implementation("io.quarkus:quarkus-rest")
     implementation("io.quarkus:quarkus-rest-jackson")
+    implementation("io.quarkus:quarkus-smallrye-health")
     implementation("io.quarkus:quarkus-hibernate-validator")
     implementation("com.fasterxml.jackson.core:jackson-annotations")
     testImplementation("io.quarkus:quarkus-junit-mockito")

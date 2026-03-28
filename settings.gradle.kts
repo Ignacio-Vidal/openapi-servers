@@ -19,4 +19,6 @@ pluginManagement {
     }
 }
 
-include(":quarkus-app", ":springboot-app", ":contracts")
+include(":quarkus-app",
+//    ":springboot-app",
+    ":contracts")
