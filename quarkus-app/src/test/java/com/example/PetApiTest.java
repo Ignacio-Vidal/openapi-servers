@@ -55,13 +55,23 @@ class PetApiTest {
     }
 
     @Test
-    void shouldFailForMissingDiscriminator() throws ApiException {
+    void shouldFailForMissingDiscriminator(){
+        PetRequest request = new PetRequest();
+        assertThrows(BadRequestException.class, () -> petsApi.createPet(request));
+    }
+
+    @Test
+    void shouldSucceedWithImplicitDiscriminator() throws ApiException {
         PetRequest request = new CatRequest()
                 .breedType(CatBreedType.BENGAL)
                 .indoor(true)
                 .name("Whiskers");
 
         PetResponse response = petsApi.createPet(request);
+        assertNotNull(response);
+        assertInstanceOf(CatResponse.class, response);
+        assertEquals(PetResponse.PetTypeEnum.CAT_RESPONSE, response.getPetType());
+
     }
 
 

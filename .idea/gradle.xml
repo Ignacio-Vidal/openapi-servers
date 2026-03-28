@@ -5,13 +5,11 @@
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/contracts" />
             <option value="$PROJECT_DIR$/quarkus-app" />
-            <option value="$PROJECT_DIR$/springboot-app" />
           </set>
         </option>
       </GradleProjectSettings>
