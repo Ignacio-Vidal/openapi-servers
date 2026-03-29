@@ -62,18 +62,6 @@ paths:
 
 components:
   schemas:
-
-    # -----------------------------------------------
-    # Shared enum
-    # -----------------------------------------------
-
-    PetType:
-      type: string
-      enum:
-        - CatRequest
-        - DogRequest
-      description: Discriminator field identifying the type of pet
-
     CatBreedType:
       type: string
       enum:
@@ -233,6 +221,7 @@ components:
           required:
             - breedType
             - indoor
+            - age
           properties:
             breedType:
               $ref: '#/components/schemas/CatBreedType'
@@ -246,6 +235,13 @@ components:
               description: Whether the cat has been declawed
               examples:
                 - false
+            age:
+              type: number
+              minimum: 0
+              maximum: 30
+              description: Age of the cat in years
+              examples:
+                - 3.5
 
     # -----------------------------------------------
     # Dog response - child references parent via allOf

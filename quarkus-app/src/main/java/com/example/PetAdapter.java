@@ -5,6 +5,8 @@ import com.example.openapi.quarkus.server.model.*;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.math.BigDecimal;
+
 @RunOnVirtualThread
 @ApplicationScoped
 public class PetAdapter implements PetsApi {
@@ -15,6 +17,7 @@ public class PetAdapter implements PetsApi {
                     .breedType(CatBreedType.SIAMESE)
                     .declawed(false)
                     .indoor(true)
+                    .age(BigDecimal.valueOf(450))
                     .petType(PetResponse.PetTypeEnum.CAT_RESPONSE)
                     .name("Whiskers");
             case DOG_REQUEST -> new DogResponse()
