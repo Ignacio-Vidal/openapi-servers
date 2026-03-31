@@ -17,7 +17,7 @@ public class PetAdapter implements PetsApi {
                     .breedType(CatBreedType.SIAMESE)
                     .declawed(false)
                     .indoor(true)
-                    .age(BigDecimal.valueOf(450))
+                    .age(BigDecimal.valueOf(30))
                     .petType(PetResponse.PetTypeEnum.CAT_RESPONSE)
                     .name("Whiskers");
             case DOG_REQUEST -> new DogResponse()
