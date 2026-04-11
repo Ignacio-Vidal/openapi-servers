@@ -17,6 +17,7 @@ dependencies {
     implementation("io.quarkus:quarkus-smallrye-health")
     implementation("io.quarkus:quarkus-hibernate-validator")
     implementation("com.fasterxml.jackson.core:jackson-annotations")
+    implementation("io.quarkus:quarkus-opentelemetry")
     testImplementation("io.quarkus:quarkus-junit-mockito")
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("org.jboss.resteasy:resteasy-client:6.2.15.Final")

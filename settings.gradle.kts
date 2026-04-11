@@ -21,4 +21,5 @@ pluginManagement {
 
 include(":quarkus-app",
 //    ":springboot-app",
+    "performance-test",
     ":contracts")
