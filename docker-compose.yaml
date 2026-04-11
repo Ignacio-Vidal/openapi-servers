@@ -1,0 +1,78 @@
+name: quarkus-profiling
+
+volumes:
+  pyroscope-data: {}
+  grafana-data: {}
+
+services:
+
+  pyroscope:
+    image: grafana/pyroscope:latest
+    user: "10001:10001"
+    ports:
+      - "4040:4040"
+    volumes:
+      - pyroscope-data:/var/lib/pyroscope
+    command:
+      - "--storage.filesystem.dir=/var/lib/pyroscope"
+      - "--self-profiling.disable-push=true"
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./otel/config.yaml:/etc/otel/config.yaml:ro
+    command: ["--config=/etc/otel/config.yaml"]
+    depends_on:
+      pyroscope:
+        condition: service_started
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      no_cache: true
+    ports:
+      - "8080:8080"
+    depends_on:
+      pyroscope:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+    cap_add:
+      - SYS_PTRACE
+      - PERFMON
+    environment:
+      PYROSCOPE_APPLICATION_NAME: "quarkus-app"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
+      PYROSCOPE_FORMAT: "jfr"
+      PYROSCOPE_UPLOAD_INTERVAL: "5s"
+      PYROSCOPE_PROFILER_ALLOC: "0"
+      PYROSCOPE_PROFILER_LOCK: "0"
+      PYROSCOPE_PROFILER_EVENT: "wall,alloc,itimer"
+      PYROSCOPE_LABELS: "env=local,arch=arm64"
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      QUARKUS_OTEL_TRACES_ENABLED: "true"
+      QUARKUS_OTEL_METRICS_ENABLED: "true"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_FEATURE_TOGGLES_ENABLE: "flameGraph"
+    depends_on:
+      pyroscope:
+        condition: service_started
+    restart: unless-stopped
