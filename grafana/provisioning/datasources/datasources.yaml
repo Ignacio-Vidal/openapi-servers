@@ -5,16 +5,25 @@ datasources:
     type: grafana-pyroscope-datasource
     uid: pyroscope
     url: http://pyroscope:4040
-    isDefault: true
+    isDefault: false
     jsonData:
       minStep: "15s"
 
   - name: Tempo
     type: tempo
     uid: tempo
-    url: http://otel-collector:4317
+    url: http://tempo:3200
+    isDefault: true
     jsonData:
-      tracesToProfiles:
+      tracesToProfilesV2:
         datasourceUid: pyroscope
-        profileTypeId: "process_cpu:wall:nanoseconds:cpu:nanoseconds"
-        customQuery: false
+        profileTypes:
+          - type: "process_cpu:cpu:nanoseconds:cpu:nanoseconds"
+            label: "CPU"
+          - type: "memory:alloc_in_new_tlab_bytes:bytes:space:bytes"
+            label: "Alloc"
+      tracesToLogs: {}
+      serviceMap:
+        datasourceUid: "tempo"
+      nodeGraph:
+        enabled: true

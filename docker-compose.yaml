@@ -3,10 +3,12 @@ name: quarkus-profiling
 volumes:
   pyroscope-data: {}
   grafana-data: {}
+  tempo-data: {}
 
 services:
 
   pyroscope:
+    container_name: pyroscope
     image: grafana/pyroscope:latest
     user: "10001:10001"
     ports:
@@ -19,6 +21,7 @@ services:
     restart: unless-stopped
 
   otel-collector:
+    container_name: otel-collector
     image: otel/opentelemetry-collector-contrib:latest
     ports:
       - "4317:4317"
@@ -29,9 +32,12 @@ services:
     depends_on:
       pyroscope:
         condition: service_started
+      tempo:
+        condition: service_started
     restart: unless-stopped
 
   app:
+    container_name: quarkus-app
     build:
       context: .
       dockerfile: Dockerfile
@@ -62,6 +68,7 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    container_name: grafana
     ports:
       - "3000:3000"
     volumes:
@@ -75,4 +82,17 @@ services:
     depends_on:
       pyroscope:
         condition: service_started
+      tempo:
+        condition: service_started
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:2.7.2
+    container_name: tempo
+    ports:
+      - "3200:3200"     # Tempo HTTP API (query frontend)
+    volumes:
+      - ./tempo/config.yaml:/etc/tempo/config.yaml:ro
+      - tempo-data:/var/tempo
+    command: ["-config.file=/etc/tempo/config.yaml"]
     restart: unless-stopped
