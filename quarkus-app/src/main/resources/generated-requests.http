@@ -1,0 +1,25 @@
+###
+POST http://localhost:8080/pets
+Content-Type: application/json
+
+
+{
+  "petType": "CAT",
+  "name": "Whiskers",
+  "breedType": "PERSIAN",
+  "indoor": true
+}
+
+<> 2026-05-03T182913.201.json
+<> 2026-05-03T182859.201.json
+
+###
+PUT http://localhost:8080/pets/ea8e6ab0-8c2b-4765-a2ba-132412fe39eb
+Content-Type: application/json
+
+{
+  "petType": "CAT",
+  "name": "Whiskers",
+  "breedType": "PERSIAN",
+  "indoor": true
+}

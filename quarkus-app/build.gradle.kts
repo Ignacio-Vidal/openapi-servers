@@ -18,6 +18,7 @@ dependencies {
     implementation("io.quarkus:quarkus-hibernate-validator")
     implementation("com.fasterxml.jackson.core:jackson-annotations")
     implementation("io.quarkus:quarkus-opentelemetry")
+    testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-junit-mockito")
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("org.jboss.resteasy:resteasy-client:6.2.15.Final")
@@ -38,3 +39,12 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-parameters")
 }
+
+tasks.named<Test>("test") {
+    doFirst {
+        useJUnitPlatform {
+            excludeTags("integration")
+        }
+    }
+}
+

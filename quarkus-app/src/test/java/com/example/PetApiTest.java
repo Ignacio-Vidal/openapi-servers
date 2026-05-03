@@ -22,9 +22,10 @@ class PetApiTest {
 
     @BeforeAll
     static void setup() {
+        int port = Integer.parseInt(System.getProperty("quarkus.http.port", "8080"));
         ResteasyClient client = new ResteasyClientBuilderImpl().build();
         petsApi = client
-                .target(create("http://localhost:8080"))
+                .target(create("http://localhost:" + port))
                 .proxy(PetApi.class);
     }
 
