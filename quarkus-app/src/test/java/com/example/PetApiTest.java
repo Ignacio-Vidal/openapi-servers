@@ -1,33 +1,31 @@
 package com.example;
 
 import com.example.openapi.quarkus.client.api.ApiException;
-import com.example.openapi.quarkus.client.api.PetsApi;
+import com.example.openapi.quarkus.client.api.PetApi;
 import com.example.openapi.quarkus.client.model.*;
-import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
-import io.quarkus.vertx.runtime.jackson.QuarkusJacksonJsonCodec;
 import jakarta.ws.rs.BadRequestException;
-import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.internal.ResteasyClientBuilderImpl;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.net.URI;
+import java.util.UUID;
 
 import static java.net.URI.create;
 import static org.junit.jupiter.api.Assertions.*;
 
-
+@Tag("integration")
 class PetApiTest {
 
-    static PetsApi petsApi;
+    static PetApi petsApi;
 
     @BeforeAll
     static void setup() {
         ResteasyClient client = new ResteasyClientBuilderImpl().build();
         petsApi = client
                 .target(create("http://localhost:8080"))
-                .proxy(PetsApi.class);
+                .proxy(PetApi.class);
     }
 
     @Test
@@ -74,7 +72,6 @@ class PetApiTest {
 
     }
 
-
     @Test
     void createDog_shouldReturnDogResponse() throws ApiException {
         PetRequest request = new DogRequest()
@@ -89,6 +86,37 @@ class PetApiTest {
         assertNotNull(response);
         assertInstanceOf(DogResponse.class, response);
         assertEquals(PetResponse.PetTypeEnum.DOG, response.getPetType());
+    }
+
+    @Test
+    void updateCat_shouldReturn204() {
+        PetRequest updateRequest = new CatRequest()
+                .breedType(CatBreedType.MAINE_COON)
+                .indoor(false)
+                .name("Mittens Updated")
+                .petType(PetRequest.PetTypeEnum.CAT);
+
+        assertDoesNotThrow(() -> petsApi.updatePet(UUID.randomUUID(), updateRequest));
+    }
+
+    @Test
+    void updateDog_shouldReturn204() {
+        PetRequest updateRequest = new DogRequest()
+                .breedType(DogBreedType.GOLDEN_RETRIEVER)
+                .trained(true)
+                .weightKg(25.0)
+                .name("Fido Updated")
+                .petType(PetRequest.PetTypeEnum.DOG);
+
+        assertDoesNotThrow(() -> petsApi.updatePet(UUID.randomUUID(), updateRequest));
+    }
+
+    @Test
+    void updatePet_withMissingRequiredFields_shouldReturn400() {
+        // Missing name, breedType, indoor — all required fields
+        assertThrows(BadRequestException.class,
+                () -> petsApi.updatePet(UUID.randomUUID(),
+                        new CatRequest().petType(PetRequest.PetTypeEnum.CAT)));
     }
 
 

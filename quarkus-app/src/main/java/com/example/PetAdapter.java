@@ -1,15 +1,16 @@
 package com.example;
 
-import com.example.openapi.quarkus.server.api.PetsApi;
+import com.example.openapi.quarkus.server.api.PetApi;
 import com.example.openapi.quarkus.server.model.*;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @RunOnVirtualThread
 @ApplicationScoped
-public class PetAdapter implements PetsApi {
+public class PetAdapter implements PetApi {
     @Override
     public PetResponse createPet(PetRequest petRequest) {
         return switch (petRequest.getPetType()) {
@@ -27,5 +28,18 @@ public class PetAdapter implements PetsApi {
                     .petType(PetResponse.PetTypeEnum.DOG)
                     .name("Rover");
         };
+    }
+
+    @Override
+    public void updatePet(UUID petId, PetRequest petRequest) {
+            // No-op for this example
+        switch (petRequest.getPetType()) {
+            case CAT -> {
+
+            }
+            case DOG -> {
+                // Handle dog update logic here
+            }
+        }
     }
 }

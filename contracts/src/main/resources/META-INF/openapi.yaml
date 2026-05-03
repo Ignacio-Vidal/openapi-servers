@@ -4,13 +4,17 @@ info:
   version: "1.0.0"
   description: API for creating pets supporting cats and dogs
 
+tags:
+  - name: Pet
+    description: Operations related to pets
+
 paths:
   /pets:
     post:
       summary: Create a pet
       operationId: createPet
       tags:
-        - Pets
+        - Pet
       requestBody:
         required: true
         content:
@@ -59,6 +63,27 @@ paths:
                     breedType: LABRADOR
                     trained: true
                     createdAt: "2024-02-01T10:30:00Z"
+  /pets/{petId}:
+    put:
+      operationId: updatePet
+      tags: [Pet]
+      description: Update an existing pet
+      summary: Update a pet
+      parameters:
+        - name: petId
+          in: path
+          schema:
+            type: string
+            format: uuid
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetRequest'
+      responses:
+        '204':
+          description: Pet updated successfully
 
 components:
   schemas:

@@ -128,7 +128,8 @@ val generateQuarkusClient = tasks.register("generateQuarkusClient", org.openapit
             "implicitHeaders" to "true",
             "annotationLibrary" to "none",
             "serializationLibrary" to "jackson",
-            "useOneOfDiscriminatorLookup" to "false"
+            "useOneOfDiscriminatorLookup" to "false",
+            "useTags" to "true"
         )
     )
 }
