@@ -1,6 +1,6 @@
-plugins{
+plugins {
     id("java-library")
-    id("org.openapi.generator") version "7.19.0"
+    id("org.openapi.generator") version "7.23.0-SNAPSHOT"
     id("org.kordamp.gradle.jandex") version "2.3.0"  // add this
 
 }
@@ -41,7 +41,7 @@ val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapit
             "bigDecimalAsString" to "true",
             "dateLibrary" to "java8",
             "disableDiscriminatorJsonIgnoreProperties" to "false",
-            "disallowAdditionalPropertiesIfNotPresent" to "false",
+            "disallowAdditionalPropertiesIfNotPresent" to "true",
             "discriminatorCaseSensitive" to "true",
             "generateConstructorWithAllArgs" to "true",
             "implicitHeaders" to "true",            "interfaceOnly" to "true",
@@ -49,6 +49,40 @@ val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapit
             "library" to "quarkus",
             "openApiNullable" to "false",
             "returnResponse" to "false",
+            "serializableModel" to "false",
+            "useBeanValidation" to "true",
+            "useJakartaEe" to "true",
+            "useMicroProfileOpenAPIAnnotations" to "true",
+            "useSwaggerAnnotations" to "false",
+            "useTags" to "true"
+        )
+    )
+}
+
+val generateQuarkusServerJbossResponse = tasks.register("generateQuarkusServerJbossResponse", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
+    group= "openapi tools"
+    description = "Generates OpenAPI server stubs using the JAX-RS specification for Quarkus."
+    generatorName.set("jaxrs-spec")
+
+    inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
+    outputDir.set("$buildDir/generated-sources/openapi/quarkus-server-jboss-response")
+    apiPackage.set("com.example.openapi.quarkus.server.jboss.api")
+    modelPackage.set("com.example.openapi.quarkus.server.jboss.model")
+
+    configOptions.set(
+        mapOf(
+            "bigDecimalAsString" to "true",
+            "dateLibrary" to "java8",
+            "disableDiscriminatorJsonIgnoreProperties" to "false",
+            "disallowAdditionalPropertiesIfNotPresent" to "true",
+            "discriminatorCaseSensitive" to "true",
+            "generateConstructorWithAllArgs" to "true",
+            "implicitHeaders" to "true",
+            "interfaceOnly" to "true",
+            "legacyDiscriminatorBehavior" to "false",
+            "library" to "quarkus",
+            "openApiNullable" to "false",
+            "returnJBossResponse" to "true",
             "serializableModel" to "false",
             "useBeanValidation" to "true",
             "useJakartaEe" to "true",
@@ -174,11 +208,11 @@ val generateQuarkusClient = tasks.register("generateQuarkusClient", org.openapit
 //}
 
 tasks.named("jandex") {
-    dependsOn(generateQuarkusServer, generateQuarkusClient)
+    dependsOn(generateQuarkusServer, generateQuarkusClient,generateQuarkusServerJbossResponse)
 }
 
 tasks.named("compileJava") {
-    dependsOn(generateQuarkusServer, generateQuarkusClient
+    dependsOn(generateQuarkusServer, generateQuarkusClient,generateQuarkusServerJbossResponse
 //        , generateSpringBootServer, generateSpringBootClient
     )
 }

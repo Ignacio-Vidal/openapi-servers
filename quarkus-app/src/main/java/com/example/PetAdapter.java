@@ -13,18 +13,18 @@ public class PetAdapter implements PetsApi {
     @Override
     public PetResponse createPet(PetRequest petRequest) {
         return switch (petRequest.getPetType()) {
-            case CAT_REQUEST -> new CatResponse()
+            case CAT -> new CatResponse()
                     .breedType(CatBreedType.SIAMESE)
                     .declawed(false)
                     .indoor(true)
                     .age(BigDecimal.valueOf(30))
-                    .petType(PetResponse.PetTypeEnum.CAT_RESPONSE)
+                    .petType(PetResponse.PetTypeEnum.CAT)
                     .name("Whiskers");
-            case DOG_REQUEST -> new DogResponse()
+            case DOG -> new DogResponse()
                     .breedType(DogBreedType.BULLDOG)
                     .trained(true)
                     .weightKg(100D)
-                    .petType(PetResponse.PetTypeEnum.DOG_RESPONSE)
+                    .petType(PetResponse.PetTypeEnum.DOG)
                     .name("Rover");
         };
     }

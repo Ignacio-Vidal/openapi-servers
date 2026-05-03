@@ -36,20 +36,20 @@ class PetApiTest {
                 .breedType(CatBreedType.SIAMESE)
                 .indoor(true)
                 .name("Whiskers")
-                .petType(PetRequest.PetTypeEnum.CAT_REQUEST);
+                .petType(PetRequest.PetTypeEnum.CAT);
 
 
         PetResponse response = petsApi.createPet(request);
 
         assertNotNull(response);
         assertInstanceOf(CatResponse.class, response);
-        assertEquals(PetResponse.PetTypeEnum.CAT_RESPONSE, response.getPetType());
+        assertEquals(PetResponse.PetTypeEnum.CAT, response.getPetType());
     }
 
     @Test
     void shouldFailForMissingCatProperty(){
         PetRequest request = new CatRequest()
-                .petType(PetRequest.PetTypeEnum.CAT_REQUEST);
+                .petType(PetRequest.PetTypeEnum.CAT);
 
         assertThrows(BadRequestException.class, () -> petsApi.createPet(request));
     }
@@ -70,7 +70,7 @@ class PetApiTest {
         PetResponse response = petsApi.createPet(request);
         assertNotNull(response);
         assertInstanceOf(CatResponse.class, response);
-        assertEquals(PetResponse.PetTypeEnum.CAT_RESPONSE, response.getPetType());
+        assertEquals(PetResponse.PetTypeEnum.CAT, response.getPetType());
 
     }
 
@@ -82,13 +82,13 @@ class PetApiTest {
                 .trained(true)
                 .weightKg(100.0)
                 .name("Rover")
-                .petType(PetRequest.PetTypeEnum.DOG_REQUEST);
+                .petType(PetRequest.PetTypeEnum.DOG);
 
         var response = petsApi.createPet(request);
 
         assertNotNull(response);
         assertInstanceOf(DogResponse.class, response);
-        assertEquals(PetResponse.PetTypeEnum.DOG_RESPONSE, response.getPetType());
+        assertEquals(PetResponse.PetTypeEnum.DOG, response.getPetType());
     }
 
 

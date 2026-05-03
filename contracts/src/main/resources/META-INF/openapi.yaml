@@ -98,8 +98,8 @@ components:
         petType:
           type: string
           enum:
-            - CatRequest
-            - DogRequest
+            - CAT
+            - DOG
         name:
           type: string
           minLength: 1
@@ -110,8 +110,8 @@ components:
       discriminator:
         propertyName: petType
         mapping:
-          CatRequest: '#/components/schemas/CatRequest'
-          DogRequest: '#/components/schemas/DogRequest'
+          CAT: '#/components/schemas/CatRequest'
+          DOG: '#/components/schemas/DogRequest'
 
     # -----------------------------------------------
     # Response base schema
@@ -126,8 +126,8 @@ components:
         petType:
           type: string
           enum:
-            - CatResponse
-            - DogResponse
+            - CAT
+            - DOG
         name:
           type: string
           minLength: 1
@@ -138,8 +138,8 @@ components:
       discriminator:
         propertyName: petType
         mapping:
-          CatResponse: '#/components/schemas/CatResponse'
-          DogResponse: '#/components/schemas/DogResponse'
+          CAT: '#/components/schemas/CatResponse'
+          DOG: '#/components/schemas/DogResponse'
 
     # -----------------------------------------------
     # Cat request - child references parent via allOf
