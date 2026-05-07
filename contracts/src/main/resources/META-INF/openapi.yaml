@@ -297,3 +297,52 @@ components:
               description: Weight of the dog in kilograms
               examples:
                 - 30.5
+  securitySchemes:
+    apiKeyAuth:
+        type: apiKey
+        in: header
+        name: X-API-Key
+    oauth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            read:pets: Read access to pets
+            write:pets: Write access to pets
+    oauth2:
+        type: oauth2
+        flows:
+          authorizationCode:
+            authorizationUrl: https://example.com/oauth/authorize
+            tokenUrl: https://example.com/oauth/token
+            scopes:
+                read:pets: Read access to pets
+                write:pets: Write access to pets
+          implicit:
+            authorizationUrl: https://example.com/api/oauth/dialog
+            scopes: {}
+    openID:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid-configuration
+    bearerHttp:
+      description: Bearer token using a JWT
+      type: http
+      scheme: Bearer
+      bearerFormat: JWT
+    basicHttp:
+      description: Basic HTTP Authentication
+      type: http
+      scheme: Basic
+
+security:
+#  - apiKeyAuth: []
+#  - basicHttp: []
+#  - bearerHttp: []
+  - oauth2: []
+  - oauth2ClientCredentials:
+      - admin
+#  - openID:
+#      - write:pets
+#      - read:pets

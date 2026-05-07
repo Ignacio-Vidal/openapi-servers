@@ -15,7 +15,7 @@ import java.util.UUID;
 import static java.net.URI.create;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Tag("integration")
+//@Tag("integration")
 class PetApiTest {
 
     static PetApi petsApi;

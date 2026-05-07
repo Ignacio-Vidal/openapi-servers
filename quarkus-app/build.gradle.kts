@@ -9,8 +9,10 @@ repositories {
 }
 
 dependencies {
-    implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.31.3"))
+    implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.35.1"))
     implementation(project(":contracts"))
+    implementation("io.quarkus:quarkus-oidc")
+    testImplementation("io.quarkus:quarkus-test-security")
     implementation("io.quarkus:quarkus-arc")
     implementation("io.quarkus:quarkus-rest")
     implementation("io.quarkus:quarkus-rest-jackson")

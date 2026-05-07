@@ -1,6 +1,6 @@
 plugins {
     id("java-library")
-    id("org.openapi.generator") version "7.23.0-SNAPSHOT"
+    id("org.openapi.generator") version "7.22.0-SNAPSHOT"
     id("org.kordamp.gradle.jandex") version "2.3.0"  // add this
 
 }
@@ -23,6 +23,7 @@ dependencies {
     implementation("io.swagger.core.v3:swagger-annotations:2.2.42")
     implementation("org.springframework:spring-web:7.0.4")
     implementation("org.springframework:spring-context:7.0.4")
+    implementation("org.eclipse.microprofile.openapi:microprofile-openapi-api:4.1.1")
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.1.0")
 }
 
@@ -30,6 +31,7 @@ val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapit
     group= "openapi tools"
     description = "Generates OpenAPI server stubs using the JAX-RS specification for Quarkus."
     generatorName.set("jaxrs-spec")
+    library.set("quarkus")
 
     inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
     outputDir.set("$buildDir/generated-sources/openapi/quarkus-server")
@@ -44,17 +46,18 @@ val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapit
             "disallowAdditionalPropertiesIfNotPresent" to "true",
             "discriminatorCaseSensitive" to "true",
             "generateConstructorWithAllArgs" to "true",
-            "implicitHeaders" to "true",            "interfaceOnly" to "true",
+            "implicitHeaders" to "true",
+            "interfaceOnly" to "true",
             "legacyDiscriminatorBehavior" to "false",
-            "library" to "quarkus",
             "openApiNullable" to "false",
             "returnResponse" to "false",
             "serializableModel" to "false",
             "useBeanValidation" to "true",
             "useJakartaEe" to "true",
-            "useMicroProfileOpenAPIAnnotations" to "true",
+            "useMicroProfileOpenAPIAnnotations" to "false",
             "useSwaggerAnnotations" to "false",
-            "useTags" to "true"
+            "useTags" to "true",
+            "useQuarkusSecurityAnnotations" to "true"
         )
     )
 }
