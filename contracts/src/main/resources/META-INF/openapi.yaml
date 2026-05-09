@@ -7,6 +7,8 @@ info:
 tags:
   - name: Pet
     description: Operations related to pets
+  - name: SecurityTest
+    description: One endpoint per @RolesAllowed edge case from PR 23680
 
 paths:
   /pets:
@@ -84,6 +86,135 @@ paths:
       responses:
         '204':
           description: Pet updated successfully
+
+  # -----------------------------------------------
+  # Security annotation edge-case endpoints
+  # Each path exercises exactly one case from PR 23680.
+  # Annotation emitted = @RolesAllowed({"**"}) expected.
+  # -----------------------------------------------
+
+  /security-tests/http-basic:
+    get:
+      operationId: testHttpBasic
+      tags: [SecurityTest]
+      summary: "HTTP Basic — no scope concept, annotation emitted"
+      security:
+        - httpBasic: []
+      responses:
+        '204':
+          description: OK
+
+  /security-tests/http-bearer:
+    get:
+      operationId: testHttpBearer
+      tags: [SecurityTest]
+      summary: "HTTP Bearer — no scope concept, annotation emitted"
+      security:
+        - httpBearer: []
+      responses:
+        '204':
+          description: OK
+
+  /security-tests/api-key:
+    get:
+      operationId: testApiKey
+      tags: [SecurityTest]
+      summary: "API Key — no scope concept, annotation emitted"
+      security:
+        - apiKeyAuth: []
+      responses:
+        '204':
+          description: OK
+
+  /security-tests/mtls:
+    get:
+      operationId: testMtls
+      tags: [SecurityTest]
+      summary: "MutualTLS — no scope concept, annotation emitted"
+      security:
+        - mtls: []
+      responses:
+        '204':
+          description: OK
+
+  /security-tests/oauth2-empty-scopes:
+    get:
+      operationId: testOauth2EmptyScopes
+      tags: [SecurityTest]
+      summary: "OAuth2 empty scopes — qualifies, annotation emitted"
+      security:
+        - oauth2: []
+      responses:
+        '204':
+          description: OK
+
+  /security-tests/openid-empty-scopes:
+    get:
+      operationId: testOpenIdEmptyScopes
+      tags: [SecurityTest]
+      summary: "OpenID Connect empty scopes — qualifies, annotation emitted"
+      security:
+        - openID: []
+      responses:
+        '204':
+          description: OK
+
+  /security-tests/oauth2-with-scopes:
+    get:
+      operationId: testOauth2WithScopes
+      tags: [SecurityTest]
+      summary: "OAuth2 with explicit scopes — scoped, annotation NOT emitted"
+      security:
+        - oauth2: [read:pets]
+      responses:
+        '204':
+          description: OK
+
+  /security-tests/or-one-qualifies:
+    get:
+      operationId: testOrOneQualifies
+      tags: [SecurityTest]
+      summary: "OR: scoped OAuth2 OR empty API key — one alternative qualifies, annotation emitted"
+      security:
+        - oauth2: [read:pets]
+        - apiKeyAuth: []
+      responses:
+        '204':
+          description: OK
+
+  /security-tests/and-all-qualify:
+    get:
+      operationId: testAndAllQualify
+      tags: [SecurityTest]
+      summary: "AND: API key AND HTTP Basic — all co-required schemes qualify, annotation emitted"
+      security:
+        - apiKeyAuth: []
+          httpBasic: []
+      responses:
+        '204':
+          description: OK
+
+  /security-tests/and-not-all-qualify:
+    get:
+      operationId: testAndNotAllQualify
+      tags: [SecurityTest]
+      summary: "AND: empty OAuth2 AND scoped OpenID — scoped member blocks annotation, NOT emitted"
+      security:
+        - oauth2: []
+          openID: [read:pets]
+      responses:
+        '204':
+          description: OK
+
+  /security-tests/no-security:
+    get:
+      operationId: testNoSecurity
+      tags: [SecurityTest]
+      summary: "Explicit empty security array — no auth required, annotation NOT emitted"
+      security: []
+      responses:
+        '204':
+          description: OK
 
 components:
   schemas:
@@ -318,7 +449,6 @@ components:
       type: oauth2
       flows:
         clientCredentials:
-          authorizationUrl: https://example.com/oauth/authorize
           tokenUrl: https://example.com/oauth/token
           scopes:
             read:pets: Read access to pets
@@ -341,9 +471,9 @@ components:
     bearerHttp:
       description: Bearer token using a JWT
       type: http
-      scheme: Bearer
+      scheme: bearer
       bearerFormat: JWT
     basicHttp:
       description: Basic HTTP Authentication
       type: http
-      scheme: Basic
+      scheme: basic
