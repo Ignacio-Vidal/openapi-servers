@@ -302,6 +302,18 @@ components:
         type: apiKey
         in: header
         name: X-API-Key
+    httpBasic:
+      type: http
+      scheme: basic
+      description: HTTP Basic Authentication
+    httpBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: HTTP Bearer Authentication with JWT tokens
+    mtls:
+      type: mutualTLS
+      description: Mutual TLS authentication using client certificates
     oauth2ClientCredentials:
       type: oauth2
       flows:
@@ -335,14 +347,3 @@ components:
       description: Basic HTTP Authentication
       type: http
       scheme: Basic
-
-security:
-#  - apiKeyAuth: []
-#  - basicHttp: []
-#  - bearerHttp: []
-  - oauth2: []
-  - oauth2ClientCredentials:
-      - admin
-#  - openID:
-#      - write:pets
-#      - read:pets

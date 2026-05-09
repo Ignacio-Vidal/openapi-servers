@@ -1,6 +1,6 @@
 plugins {
     id("java-library")
-    id("org.openapi.generator") version "7.22.0-SNAPSHOT"
+    id("org.openapi.generator") version "7.23.0-SNAPSHOT"
     id("org.kordamp.gradle.jandex") version "2.3.0"  // add this
 
 }
@@ -57,7 +57,7 @@ val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapit
             "useMicroProfileOpenAPIAnnotations" to "false",
             "useSwaggerAnnotations" to "false",
             "useTags" to "true",
-            "useQuarkusSecurityAnnotations" to "true"
+            "useJakartaSecurityAnnotations" to "true"
         )
     )
 }
