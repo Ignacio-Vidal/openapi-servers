@@ -27,6 +27,7 @@ Authorization: Bearer {{auth_token}}
 ###
 PUT http://localhost:8080/pets/ea8e6ab0-8c2b-4765-a2ba-132412fe39eb
 Content-Type: application/json
+Authorization: Bearer {{auth_token}}
 
 {
   "petType": "CAT",
@@ -34,3 +35,48 @@ Content-Type: application/json
   "breedType": "PERSIAN",
   "indoor": true
 }
+
+### ── Security Tests ──────────────────────────────────────────────────────────
+
+### testAndAllQualify — requires auth (all security schemes qualify together)
+GET http://localhost:8080/security-tests/and-all-qualify
+Authorization: Bearer {{auth_token}}
+
+### testAndNotAllQualify — no security annotation, no token needed
+GET http://localhost:8080/security-tests/and-not-all-qualify
+
+### testApiKey — requires auth (API key scheme, but enforced as @RolesAllowed(**))
+GET http://localhost:8080/security-tests/api-key
+Authorization: Bearer {{auth_token}}
+
+### testHttpBasic — requires auth (HTTP Basic scheme, enforced as @RolesAllowed(**))
+GET http://localhost:8080/security-tests/http-basic
+Authorization: Bearer {{auth_token}}
+
+### testHttpBearer — requires auth (HTTP Bearer scheme)
+GET http://localhost:8080/security-tests/http-bearer
+Authorization: Bearer {{auth_token}}
+
+### testMtls — requires auth (mTLS scheme, enforced as @RolesAllowed(**))
+GET http://localhost:8080/security-tests/mtls
+Authorization: Bearer {{auth_token}}
+
+### testNoSecurity — no security annotation, no token needed
+GET http://localhost:8080/security-tests/no-security
+
+### testOauth2EmptyScopes — requires auth (OAuth2, no specific scopes)
+GET http://localhost:8080/security-tests/oauth2-empty-scopes
+Authorization: Bearer {{auth_token}}
+
+### testOauth2WithScopes — no security annotation generated (scopes not mapped to roles)
+GET http://localhost:8080/security-tests/oauth2-with-scopes
+Authorization: Bearer {{auth_token}}
+
+### testOpenIdEmptyScopes — requires auth (OpenID Connect, no specific scopes)
+GET http://localhost:8080/security-tests/openid-empty-scopes
+Authorization: Bearer {{auth_token}}
+
+### testOrOneQualifies — requires auth (at least one security scheme qualifies)
+GET http://localhost:8080/security-tests/or-one-qualifies
+Authorization: Bearer {{auth_token}}
+
