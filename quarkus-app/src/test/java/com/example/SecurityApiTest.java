@@ -2,6 +2,7 @@ package com.example;
 
 import com.example.openapi.quarkus.client.api.SecurityTestApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
@@ -121,11 +122,14 @@ class SecurityApiTest {
         assertThrows(NotAuthorizedException.class, () -> api.testOrOneQualifies());
     }
 
-    // ── Without token: public endpoints must return 204 ───────────────────────
+    @Test
+    void testOauth2WithScopes_withoutToken_shouldReturn401() {
+        assertThrows(NotAuthorizedException.class, () -> api.testOauth2WithScopes());
+    }
 
     @Test
-    void testAndNotAllQualify_withoutToken_shouldReturn204() {
-        assertDoesNotThrow(() -> api.testAndNotAllQualify());
+    void testAndNotAllQualify_withoutToken_shouldReturn401() {
+        assertThrows(NotAuthorizedException.class, () -> api.testAndNotAllQualify());
     }
 
     @Test
@@ -133,16 +137,16 @@ class SecurityApiTest {
         assertDoesNotThrow(() -> api.testNoSecurity());
     }
 
-    @Test
-    void testOauth2WithScopes_withoutToken_shouldReturn204() {
-        assertDoesNotThrow(() -> api.testOauth2WithScopes());
-    }
-
     // ── With valid token: secured endpoints must return 204 ───────────────────
 
     @Test
     void testAndAllQualify_withToken_shouldReturn204() {
         assertDoesNotThrow(() -> authenticatedApi.testAndAllQualify());
+    }
+
+    @Test
+    void testAndNotAllQualify_withToken_shouldReturn403() {
+        assertThrows(ForbiddenException.class, () -> authenticatedApi.testAndNotAllQualify());
     }
 
     @Test
@@ -166,8 +170,18 @@ class SecurityApiTest {
     }
 
     @Test
+    void testNoSecurity_withToken_shouldReturn204() {
+        assertDoesNotThrow(() -> authenticatedApi.testNoSecurity());
+    }
+
+    @Test
     void testOauth2EmptyScopes_withToken_shouldReturn204() {
         assertDoesNotThrow(() -> authenticatedApi.testOauth2EmptyScopes());
+    }
+
+    @Test
+    void testOauth2WithScopes_withToken_shouldReturn403() {
+        assertThrows(ForbiddenException.class, () -> authenticatedApi.testOauth2WithScopes());
     }
 
     @Test

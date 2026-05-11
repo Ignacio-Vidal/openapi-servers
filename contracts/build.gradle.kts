@@ -100,6 +100,7 @@ val generateQuarkusClient = tasks.register("generateQuarkusClient", org.openapit
     group = "openapi tools"
     description = "Generates a MicroProfile REST client for Quarkus."
     generatorName.set("java")
+    library.set("microprofile")
 
     inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
     outputDir.set("${layout.buildDirectory.get()}/generated-sources/openapi/quarkus-client")
@@ -113,8 +114,6 @@ val generateQuarkusClient = tasks.register("generateQuarkusClient", org.openapit
         mapOf(
             // microprofile library generates a @RegisterRestClient interface
             // which Quarkus picks up natively with quarkus-rest-client
-            "library" to "microprofile",
-
             // Quarkus MicroProfile Rest Client version
             "microprofileRestClientVersion" to "3.0",
             "disableDiscriminatorJsonIgnoreProperties" to "false",
