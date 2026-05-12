@@ -66,6 +66,7 @@ val generateQuarkusServerJbossResponse = tasks.register("generateQuarkusServerJb
     group= "openapi tools"
     description = "Generates OpenAPI server stubs using the JAX-RS specification for Quarkus."
     generatorName.set("jaxrs-spec")
+    library.set("quarkus")
 
     inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
     outputDir.set("$buildDir/generated-sources/openapi/quarkus-server-jboss-response")
@@ -91,7 +92,8 @@ val generateQuarkusServerJbossResponse = tasks.register("generateQuarkusServerJb
             "useJakartaEe" to "true",
             "useMicroProfileOpenAPIAnnotations" to "true",
             "useSwaggerAnnotations" to "false",
-            "useTags" to "true"
+            "useTags" to "true",
+
         )
     )
 }
@@ -131,7 +133,8 @@ val generateQuarkusClient = tasks.register("generateQuarkusClient", org.openapit
             "annotationLibrary" to "none",
             "serializationLibrary" to "jackson",
             "useOneOfDiscriminatorLookup" to "false",
-            "useTags" to "true"
+            "useTags" to "true",
+            "useMicroProfileOpenAPIAnnotations" to "true"
         )
     )
 }
