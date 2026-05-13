@@ -2,9 +2,7 @@ package com.example;
 
 import com.example.openapi.quarkus.server.api.PetApi;
 import com.example.openapi.quarkus.server.model.*;
-import io.quarkus.security.Authenticated;
 import io.smallrye.common.annotation.RunOnVirtualThread;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.math.BigDecimal;
@@ -12,8 +10,7 @@ import java.util.UUID;
 
 @RunOnVirtualThread
 @ApplicationScoped
-public class PetAdapter implements PetApi {
-    @RolesAllowed({"**"})
+public class PetAdapter implements PetApi{
     @Override
     public PetResponse createPet(PetRequest petRequest) {
         return switch (petRequest.getPetType()) {
@@ -34,7 +31,6 @@ public class PetAdapter implements PetApi {
     }
 
     @Override
-    @Authenticated
     public void updatePet(UUID petId, PetRequest petRequest) {
             // No-op for this example
         switch (petRequest.getPetType()) {

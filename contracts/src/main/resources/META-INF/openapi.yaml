@@ -9,6 +9,13 @@ tags:
     description: Operations related to pets
   - name: SecurityTest
     description: One endpoint per @RolesAllowed edge case from PR 23680
+  - name: PermitAllTest
+    description: One endpoint per @PermitAll edge case from PR 23782
+
+# Global security: enables Rules B, C, E from PR 23782 to be exercised by
+# endpoints below. Pre-existing endpoints opt out explicitly with security: [].
+security:
+  - httpBearer: []
 
 paths:
   /pets:
@@ -17,6 +24,7 @@ paths:
       operationId: createPet
       tags:
         - Pet
+      security: []
       requestBody:
         required: true
         content:
@@ -71,6 +79,7 @@ paths:
       tags: [Pet]
       description: Update an existing pet
       summary: Update a pet
+      security: []
       parameters:
         - name: petId
           in: path
@@ -210,8 +219,46 @@ paths:
     get:
       operationId: testNoSecurity
       tags: [SecurityTest]
-      summary: "Explicit empty security array — no auth required, annotation NOT emitted"
+      summary: "Explicit empty security array — no auth required, @PermitAll emitted (Rule A)"
       security: []
+      responses:
+        '204':
+          description: OK
+
+  # -----------------------------------------------
+  # @PermitAll edge-case endpoints (PR 23782)
+  # The global `security: [httpBearer: []]` defined at the top of this spec
+  # enables Rules B, C, E to be exercised without changing pre-existing
+  # endpoints (which explicitly opt out with `security: []`).
+  # -----------------------------------------------
+
+  /permit-all-tests/op-empty-overrides-global:
+    get:
+      operationId: testPermitAllOpEmptyOverridesGlobal
+      tags: [PermitAllTest]
+      summary: "Rule C: op-level security:[] overrides non-empty global httpBearer — @PermitAll emitted"
+      security: []
+      responses:
+        '204':
+          description: OK
+
+  /permit-all-tests/inherits-non-empty-global:
+    get:
+      operationId: testPermitAllInheritsNonEmptyGlobal
+      tags: [PermitAllTest]
+      summary: "Sanity check: no op-level security inherits global httpBearer — @RolesAllowed({\"**\"}) emitted (NOT @PermitAll)"
+      responses:
+        '204':
+          description: OK
+
+  /permit-all-tests/or-with-anonymous:
+    get:
+      operationId: testPermitAllOrWithAnonymous
+      tags: [PermitAllTest]
+      summary: "Rule F: OR list with anonymous alternative ({}) — least-restrictive wins, @PermitAll emitted"
+      security:
+        - oauth2: [read:pets]
+        - {}
       responses:
         '204':
           description: OK

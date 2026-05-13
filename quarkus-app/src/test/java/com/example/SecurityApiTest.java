@@ -1,5 +1,6 @@
 package com.example;
 
+import com.example.openapi.quarkus.client.api.PermitAllTestApi;
 import com.example.openapi.quarkus.client.api.SecurityTestApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.ForbiddenException;
@@ -23,6 +24,8 @@ class SecurityApiTest {
 
     static SecurityTestApi api;
     static SecurityTestApi authenticatedApi;
+    static PermitAllTestApi permitAllApi;
+    static PermitAllTestApi authenticatedPermitAllApi;
 
     /** Reads the Keycloak base URL from -Dkeycloak.url or falls back to the value used in generated-requests.http */
     private static final String KEYCLOAK_URL =
@@ -67,17 +70,17 @@ class SecurityApiTest {
         URI baseUri = URI.create("http://localhost:" + port);
 
         // Unauthenticated client — no Authorization header
-        api = new ResteasyClientBuilderImpl().build()
-                .target(baseUri)
-                .proxy(SecurityTestApi.class);
+        ResteasyClient anonClient = new ResteasyClientBuilderImpl().build();
+        api = anonClient.target(baseUri).proxy(SecurityTestApi.class);
+        permitAllApi = anonClient.target(baseUri).proxy(PermitAllTestApi.class);
 
         // Authenticated client — every request carries a Bearer token
         String token = obtainToken();
-        authenticatedApi = new ResteasyClientBuilderImpl()
+        ResteasyClient authClient = new ResteasyClientBuilderImpl()
                 .register(new BearerTokenFilter(token))
-                .build()
-                .target(baseUri)
-                .proxy(SecurityTestApi.class);
+                .build();
+        authenticatedApi = authClient.target(baseUri).proxy(SecurityTestApi.class);
+        authenticatedPermitAllApi = authClient.target(baseUri).proxy(PermitAllTestApi.class);
     }
 
     // ── Without token: secured endpoints must return 401 ─────────────────────
@@ -192,5 +195,46 @@ class SecurityApiTest {
     @Test
     void testOrOneQualifies_withToken_shouldReturn204() {
         assertDoesNotThrow(() -> authenticatedApi.testOrOneQualifies());
+    }
+
+    // ── @PermitAll endpoints (PR 23782) ───────────────────────────────────────
+    // @PermitAll means anonymous access succeeds AND authenticated access still
+    // succeeds — Quarkus treats it as "no role required."
+
+    // Rule C: op-level security:[] overrides non-empty global httpBearer
+
+    @Test
+    void testPermitAllOpEmptyOverridesGlobal_withoutToken_shouldReturn204() {
+        assertDoesNotThrow(() -> permitAllApi.testPermitAllOpEmptyOverridesGlobal());
+    }
+
+    @Test
+    void testPermitAllOpEmptyOverridesGlobal_withToken_shouldReturn204() {
+        assertDoesNotThrow(() -> authenticatedPermitAllApi.testPermitAllOpEmptyOverridesGlobal());
+    }
+
+    // Rule F: OR list with anonymous alternative ({})
+
+    @Test
+    void testPermitAllOrWithAnonymous_withoutToken_shouldReturn204() {
+        assertDoesNotThrow(() -> permitAllApi.testPermitAllOrWithAnonymous());
+    }
+
+    @Test
+    void testPermitAllOrWithAnonymous_withToken_shouldReturn204() {
+        assertDoesNotThrow(() -> authenticatedPermitAllApi.testPermitAllOrWithAnonymous());
+    }
+
+    // Sanity: no op-level security inherits non-empty global → @RolesAllowed({"**"})
+
+    @Test
+    void testPermitAllInheritsNonEmptyGlobal_withoutToken_shouldReturn401() {
+        assertThrows(NotAuthorizedException.class,
+                () -> permitAllApi.testPermitAllInheritsNonEmptyGlobal());
+    }
+
+    @Test
+    void testPermitAllInheritsNonEmptyGlobal_withToken_shouldReturn204() {
+        assertDoesNotThrow(() -> authenticatedPermitAllApi.testPermitAllInheritsNonEmptyGlobal());
     }
 }
