@@ -9,7 +9,7 @@ repositories {
 }
 
 dependencies {
-    implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.35.1"))
+    implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.35.3"))
     implementation(project(":contracts"))
     implementation("io.quarkus:quarkus-oidc")
     testImplementation("io.quarkus:quarkus-test-security")

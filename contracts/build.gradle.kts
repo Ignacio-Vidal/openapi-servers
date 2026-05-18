@@ -57,7 +57,8 @@ val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapit
             "useMicroProfileOpenAPIAnnotations" to "false",
             "useSwaggerAnnotations" to "false",
             "useTags" to "true",
-            "useJakartaSecurityAnnotations" to "true"
+            "useJakartaSecurityAnnotations" to "true",
+            "useOneOfInterfaces" to "true"
         )
     )
 }
