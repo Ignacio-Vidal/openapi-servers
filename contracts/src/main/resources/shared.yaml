@@ -1,0 +1,15 @@
+openapi: "3.1.1"
+info:
+  title: Pet API
+  version: "1.0.0"
+  description: API for creating pets supporting cats and dogs
+
+components:
+  schemas:
+    petType:
+      type: string
+      description: The type of pet for discrimination
+      enum:
+        - CAT
+        - DOG
+      x-field-extra-annotation: "@org.hibernate.validator.constraints.UniqueElements"

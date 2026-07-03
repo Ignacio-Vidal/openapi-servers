@@ -12,6 +12,7 @@ import java.util.UUID;
 @ApplicationScoped
 public class PetAdapter implements PetApi{
     @Override
+
     public PetResponse createPet(PetRequest petRequest) {
         return switch (petRequest.getPetType()) {
             case CAT -> new CatResponse()
@@ -27,6 +28,25 @@ public class PetAdapter implements PetApi{
                     .weightKg(100D)
                     .petType(PetResponse.PetTypeEnum.DOG)
                     .name("Rover");
+        };
+    }
+
+    @Override
+    public PetResponseV2 createPetV2(PetRequestV2 petRequestV2) {
+        return switch (petRequestV2.getPetType()) {
+            case CAT -> new CatResponseV2()
+                    .petType(PetType.CAT)
+                    .name("Whiskers")
+                    .breedType(CatBreedType.SIAMESE)
+                    .indoor(true)
+                    .declawed(false)
+                    .age(BigDecimal.valueOf(30));
+            case DOG -> new DogResponseV2()
+                    .petType(PetType.DOG)
+                    .name("Rover")
+                    .breedType(DogBreedType.BULLDOG)
+                    .trained(true)
+                    .weightKg(100D);
         };
     }
 
