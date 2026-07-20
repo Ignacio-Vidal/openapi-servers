@@ -38,6 +38,7 @@ class PetApiTest {
         PetRequest request = new CatRequest()
                 .breedType(CatBreedType.SIAMESE)
                 .indoor(true)
+                .ownerEmail("owner@example.com")
                 .name("Whiskers")
                 .petType(PetRequest.PetTypeEnum.CAT);
 
@@ -68,6 +69,7 @@ class PetApiTest {
         PetRequest request = new CatRequest()
                 .breedType(CatBreedType.BENGAL)
                 .indoor(true)
+                .ownerEmail("owner@example.com")
                 .name("Whiskers");
 
         PetResponse response = petsApi.createPet(request);
@@ -98,6 +100,7 @@ class PetApiTest {
         PetRequest updateRequest = new CatRequest()
                 .breedType(CatBreedType.MAINE_COON)
                 .indoor(false)
+                .ownerEmail("owner@example.com")
                 .name("Mittens Updated")
                 .petType(PetRequest.PetTypeEnum.CAT);
 
@@ -118,10 +121,37 @@ class PetApiTest {
 
     @Test
     void updatePet_withMissingRequiredFields_shouldReturn400() {
-        // Missing name, breedType, indoor — all required fields
+        // Missing name, breedType, indoor, ownerEmail — all required fields
         assertThrows(BadRequestException.class,
                 () -> petsApi.updatePet(UUID.randomUUID(),
                         new CatRequest().petType(PetRequest.PetTypeEnum.CAT)));
+    }
+
+    @Test
+    void createCat_missingRequiredOwnerEmail_shouldReturn400() {
+        // ownerEmail is required on CatRequest but omitted; every other required field is present,
+        // so this isolates the @NotNull on ownerEmail as the sole cause of the 400.
+        PetRequest request = new CatRequest()
+                .breedType(CatBreedType.SIAMESE)
+                .indoor(true)
+                .name("Whiskers")
+                .petType(PetRequest.PetTypeEnum.CAT);
+
+        assertThrows(BadRequestException.class, () -> petsApi.createPet(request));
+    }
+
+    @Test
+    void createCat_invalidOwnerEmailFormat_shouldReturn400() {
+        // ownerEmail has format: email → @Email on the server; a malformed value is rejected
+        // even though all required fields are populated.
+        PetRequest request = new CatRequest()
+                .breedType(CatBreedType.SIAMESE)
+                .indoor(true)
+                .ownerEmail("not-an-email")
+                .name("Whiskers")
+                .petType(PetRequest.PetTypeEnum.CAT);
+
+        assertThrows(BadRequestException.class, () -> petsApi.createPet(request));
     }
 
     // ── V2: oneOf rendered as interfaces (useOneOfInterfaces) ────────────────
@@ -192,6 +222,26 @@ class PetApiTest {
         assertEquals("Rover", dog.getName());
         assertEquals(DogBreedType.BULLDOG, dog.getBreedType());
         assertEquals(true, dog.getTrained());
+    }
+
+    @Test
+    void createPetV2_responseIsExhaustivelyMatchable() throws ApiException {
+        PetResponseV2 response = petsApi.createPetV2(
+                new CatRequestV2()
+                        .petType(PetType.CAT)
+                        .name("Whiskers")
+                        .breedType(CatBreedType.SIAMESE)
+                        .indoor(true));
+
+        // PetResponseV2 is a sealed interface (useSealedOneOfInterfaces), so this pattern switch
+        // needs no default branch: the compiler proves CAT and DOG are the only possibilities.
+        // If the generator ever stopped emitting `sealed`, this test would fail to compile.
+        String sound = switch (response) {
+            case CatResponseV2 cat -> "meow from " + cat.getName();
+            case DogResponseV2 dog -> "woof from " + dog.getName();
+        };
+
+        assertEquals("meow from Whiskers", sound);
     }
 
     @Test

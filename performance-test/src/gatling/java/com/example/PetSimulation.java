@@ -27,14 +27,14 @@ public class PetSimulation extends Simulation {
                 .breedType(CatBreedType.SIAMESE)
                 .indoor(true)
                 .name("Whiskers")
-                .petType(PetRequest.PetTypeEnum.CAT_REQUEST);
+                .petType(PetRequest.PetTypeEnum.CAT);
 
     private static final PetRequest DOG_REQUEST_BODY = new DogRequest()
             .breedType(DogBreedType.BULLDOG)
             .trained(true)
             .weightKg(100.0)
             .name("Rover")
-            .petType(PetRequest.PetTypeEnum.DOG_REQUEST);
+            .petType(PetRequest.PetTypeEnum.DOG);
 
     ScenarioBuilder createCat = scenario("Create Cat")
             .exec(

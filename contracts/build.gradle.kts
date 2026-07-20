@@ -1,6 +1,6 @@
 plugins {
     id("java-library")
-    id("org.openapi.generator") version "7.23.0-SNAPSHOT"
+    id("org.openapi.generator") version "7.24.0"
     id("org.kordamp.gradle.jandex") version "2.3.0"  // add this
 
 }
@@ -33,6 +33,7 @@ val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapit
     generatorName.set("jaxrs-spec")
     library.set("quarkus")
 
+
     inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
     outputDir.set("$buildDir/generated-sources/openapi/quarkus-server")
     apiPackage.set("com.example.openapi.quarkus.server.api")
@@ -58,10 +59,89 @@ val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapit
             "useSwaggerAnnotations" to "false",
             "useTags" to "true",
             "useJakartaSecurityAnnotations" to "true",
-            // PR1 jar installed: jaxrs-spec now renders oneOf schemas as interfaces.
             "useOneOfInterfaces" to "true",
-            // useSealed/useRecords are PR2/PR3 features, not in the installed PR1 jar.
-            // "useSealed" to "true",
+            "useSealed" to "true",
+        )
+    )
+}
+
+val generateQuarkusServerAlternative = tasks.register("generateQuarkusServerAlternative", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
+    group= "openapi tools"
+    description = "Generates OpenAPI server stubs using the JAX-RS specification for Quarkus."
+    generatorName.set("jaxrs-spec")
+    library.set("quarkus")
+
+    inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
+    outputDir.set("$buildDir/generated-sources/openapi/quarkus-server-alternative")
+    apiPackage.set("com.example.openapi.quarkus.server.alternative.api")
+    modelPackage.set("com.example.openapi.quarkus.server.alternative.model")
+
+    configOptions.set(
+        mapOf(
+            "bigDecimalAsString" to "true",
+            "dateLibrary" to "java8",
+            "disableDiscriminatorJsonIgnoreProperties" to "false",
+            "disallowAdditionalPropertiesIfNotPresent" to "true",
+            "discriminatorCaseSensitive" to "true",
+            "generateConstructorWithAllArgs" to "true",
+            "implicitHeaders" to "true",
+            "interfaceOnly" to "true",
+            "legacyDiscriminatorBehavior" to "false",
+            "openApiNullable" to "false",
+            "returnResponse" to "false",
+            "serializableModel" to "false",
+            "useBeanValidation" to "true",
+            "useJakartaEe" to "true",
+            "useMicroProfileOpenAPIAnnotations" to "false",
+            "useSwaggerAnnotations" to "false",
+            "useTags" to "true",
+            "useJakartaSecurityAnnotations" to "true",
+            // 7.24.0-SNAPSHOT (pr2-jaxrs-usesealed): oneOf schemas render as sealed interfaces.
+            "useOneOfInterfaces" to "false",
+            "useSealed" to "true",
+        )
+    )
+}
+
+
+
+val generateQuarkusServerRecords = tasks.register("generateQuarkusServerRecords", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
+    group= "openapi tools"
+    description = "Generates JAX-RS spec server stubs whose oneOf-interface implementations are Java records."
+    generatorName.set("jaxrs-spec")
+    library.set("quarkus")
+
+    inputSpec.set("$projectDir/src/main/resources/META-INF/openapi.yaml")
+    outputDir.set("$buildDir/generated-sources/openapi/quarkus-server-records")
+    apiPackage.set("com.example.openapi.quarkus.server.records.api")
+    modelPackage.set("com.example.openapi.quarkus.server.records.model")
+
+    configOptions.set(
+        mapOf(
+            "bigDecimalAsString" to "true",
+            "dateLibrary" to "java8",
+            "disableDiscriminatorJsonIgnoreProperties" to "false",
+            "disallowAdditionalPropertiesIfNotPresent" to "true",
+            "discriminatorCaseSensitive" to "true",
+            "generateConstructorWithAllArgs" to "true",
+            "implicitHeaders" to "true",
+            "interfaceOnly" to "true",
+            "legacyDiscriminatorBehavior" to "false",
+            "openApiNullable" to "false",
+            "returnResponse" to "false",
+            "serializableModel" to "false",
+            "useBeanValidation" to "true",
+            "useJakartaEe" to "true",
+            "useMicroProfileOpenAPIAnnotations" to "false",
+            "useSwaggerAnnotations" to "false",
+            "useTags" to "true",
+            "useJakartaSecurityAnnotations" to "true",
+            // 7.24.0-SNAPSHOT (pr3-jaxrs-userecords): oneOf-interface implementations render as
+            // Java records. useRecords requires useOneOfInterfaces; combined with useSealed the
+            // interface is sealed and permits the record subtypes.
+            "useOneOfInterfaces" to "true",
+            "useSealed" to "true",
+            "useRecords" to "true",
         )
     )
 }
@@ -138,10 +218,13 @@ val generateQuarkusClient = tasks.register("generateQuarkusClient", org.openapit
             "annotationLibrary" to "none",
             "serializationLibrary" to "jackson",
             "useOneOfDiscriminatorLookup" to "false",
-            // microprofile client now renders oneOf schemas as interfaces (mp-client-oneof-interface).
+            // microprofile client renders oneOf schemas as interfaces (merged in 7.24).
+            // Client sealed support (useSealedOneOfInterfaces — different flag name than
+            // jaxrs useSealed) needs the unmerged mp-client-sealed jar; not enabled here.
             "useOneOfInterfaces" to "true",
             "useTags" to "true",
-            "useMicroProfileOpenAPIAnnotations" to "true"
+            "useMicroProfileOpenAPIAnnotations" to "true",
+            "useSealedOneOfInterfaces" to "true"
         )
     )
 }
@@ -225,11 +308,11 @@ val generateSpringBootServer = tasks.register("generateSpringBootServer", org.op
 //}
 
 tasks.named("jandex") {
-    dependsOn(generateQuarkusServer, generateQuarkusClient,generateQuarkusServerJbossResponse)
+    dependsOn(generateQuarkusServer,generateQuarkusServerAlternative, generateQuarkusServerRecords, generateQuarkusClient,generateQuarkusServerJbossResponse)
 }
 
 tasks.named("compileJava") {
-    dependsOn(generateQuarkusServer, generateQuarkusClient,generateQuarkusServerJbossResponse
+    dependsOn(generateQuarkusServer,generateQuarkusServerAlternative, generateQuarkusServerRecords, generateQuarkusClient,generateQuarkusServerJbossResponse
 //        , generateSpringBootServer, generateSpringBootClient
     )
 }
@@ -238,6 +321,8 @@ sourceSets{
     main {
         java {
             srcDir(layout.buildDirectory.dir("generated-sources/openapi/quarkus-server/src/gen/java"))
+            srcDir(layout.buildDirectory.dir("generated-sources/openapi/quarkus-server-alternative/src/gen/java"))
+            srcDir(layout.buildDirectory.dir("generated-sources/openapi/quarkus-server-records/src/gen/java"))
             srcDir(layout.buildDirectory.dir("generated-sources/openapi/quarkus-client/src/main/java"))
             srcDir(layout.buildDirectory.dir("generated-sources/openapi/springboot-server/src/main/java"))
             srcDir(layout.buildDirectory.dir("generated-sources/openapi/springboot-client/src/main/java"))

@@ -418,6 +418,7 @@ components:
         - name
         - breedType
         - indoor
+        - ownerEmail
       allOf:
         - $ref: '#/components/schemas/PetRequest'
         - type: object
@@ -437,6 +438,12 @@ components:
               description: Whether the cat has been declawed
               examples:
                 - false
+            ownerEmail:
+              type: string
+              format: email
+              description: Contact email address for the cat's owner
+              examples:
+                - owner@example.com
 
     # -----------------------------------------------
     # Dog request - child references parent via allOf
