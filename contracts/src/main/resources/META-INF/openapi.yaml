@@ -11,6 +11,8 @@ tags:
     description: One endpoint per @RolesAllowed edge case from PR 23680
   - name: PermitAllTest
     description: One endpoint per @PermitAll edge case from PR 23782
+  - name: FileUpload
+    description: Single and multiple multipart/form-data file uploads
 
 # Global security: enables Rules B, C, E from PR 23782 to be exercised by
 # endpoints below. Pre-existing endpoints opt out explicitly with security: [].
@@ -128,6 +130,62 @@ paths:
                     breedType: LABRADOR
                     trained: true
                     createdAt: "2024-02-01T10:30:00Z"
+#  /v3/pets:
+#    post:
+#      summary: Create a pet
+#      operationId: createPetV3
+#      tags:
+#        - Pet
+#      security: []
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              title: PetRequest
+#              $ref: "#/components/schemas/PetRequestV3"
+#            examples:
+#              cat:
+#                summary: Cat request
+#                value:
+#                  petType: CAT
+#                  name: "Whiskers"
+#                  indoor: true
+#                  breedType: DOMESTIC_SHORTHAIR
+#              dog:
+#                summary: Dog request
+#                value:
+#                  petType: DOG
+#                  name: "Buddy"
+#                  breedType: LABRADOR
+#                  trained: true
+#      responses:
+#        '201':
+#          description: Pet created successfully
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/PetResponseV2'
+#              examples:
+#                cat:
+#                  summary: Cat response
+#                  value:
+#                    id: "pet_01HQ7CAT123456789"
+#                    petType: CAT
+#                    name: "Whiskers"
+#                    indoor: true
+#                    breedType: DOMESTIC_SHORTHAIR
+#                    createdAt: "2024-02-01T10:30:00Z"
+#                dog:
+#                  summary: Dog response
+#                  value:
+#                    id: "pet_01HQ7DOG987654321"
+#                    petType: DOG
+#                    name: "Buddy"
+#                    breedType: LABRADOR
+#                    trained: true
+#                    createdAt: "2024-02-01T10:30:00Z"
+
   /pets/{petId}:
     put:
       operationId: updatePet
@@ -317,6 +375,98 @@ paths:
       responses:
         '204':
           description: OK
+
+  # -----------------------------------------------
+  # multipart/form-data file upload endpoints.
+  # A `type: array` of `format: binary` items used to be collapsed onto the
+  # scalar file type, generating the same signature as a single-file upload.
+  # These endpoints pin both shapes so the generated parameters stay distinct.
+  # -----------------------------------------------
+
+  /uploads/single:
+    post:
+      operationId: uploadSingleFile
+      tags: [FileUpload]
+      summary: "One binary property is bound to a scalar FileUpload"
+      security: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The file to upload
+                description:
+                  type: string
+                  description: Free-text description of the upload
+      responses:
+        '202':
+          description: Upload accepted
+
+  /uploads/multiple:
+    post:
+      operationId: uploadMultipleFiles
+      tags: [FileUpload]
+      summary: "An array of binary items is bound to List<FileUpload> under one part name"
+      security: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  description: The files to upload, all sharing the `files` part name
+                  items:
+                    type: string
+                    format: binary
+                description:
+                  type: string
+                  description: Free-text description of the upload
+      responses:
+        '202':
+          description: Uploads accepted
+
+  /uploads/mixed:
+    post:
+      operationId: uploadMixed
+      tags: [FileUpload]
+      summary: "A file next to a non-file array — only the file type is affected by the binary binding"
+      security: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: A single file, bound to a scalar
+                tags:
+                  type: array
+                  description: A non-file array, which must stay a plain List
+                  items:
+                    type: string
+                description:
+                  type: string
+                  description: Free-text description of the upload
+      responses:
+        '202':
+          description: Upload accepted
 
 components:
   schemas:
@@ -574,10 +724,6 @@ components:
             description: Name of the pet
             examples:
                 - "Whiskers"
-    # -----------------------------------------------
-    # Response base schema
-    # Discriminator also lives here on the parent
-    # -----------------------------------------------
 
     # -----------------------------------------------
 
@@ -645,6 +791,100 @@ components:
               description: Weight of the dog in kilograms
               examples:
                 - 30.5
+
+#    PetRequestV3:
+#      type: object
+#      oneOf:
+#        - $ref: '#/components/schemas/CatRequestV3'
+#        - $ref: '#/components/schemas/DogRequestV3'
+#      discriminator:
+#        propertyName: petType
+#        mapping:
+#          CAT: '#/components/schemas/CatRequestV3'
+#          DOG: '#/components/schemas/DogRequestV3'
+#
+#    PetRequestV3Base:
+#      type: object
+#      required:
+#        - petType
+#        - name
+#      properties:
+#        petType:
+#          $ref: '#/components/schemas/PetType'
+#        name:
+#          type: string
+#          minLength: 1
+#          maxLength: 50
+#          description: Name of the pet
+#          examples:
+#            - "Whiskers"
+#
+#    # -----------------------------------------------
+#
+#    # Cat request - child references parent via allOf
+#    # -----------------------------------------------
+#    CatRequestV3:
+#      type: object
+#      description: Request payload for creating a cat
+#      required:
+#        - petType
+#        - name
+#        - breedType
+#        - indoor
+#      allOf:
+#        - $ref: '#/components/schemas/PetRequestV3Base'
+#        - type: object
+#          required:
+#            - breedType
+#            - indoor
+#          properties:
+#            breedType:
+#              $ref: '#/components/schemas/CatBreedType'
+#            indoor:
+#              type: boolean
+#              description: Whether the cat is an indoor cat
+#              examples:
+#                - true
+#            declawed:
+#              type: boolean
+#              description: Whether the cat has been declawed
+#              examples:
+#                - false
+#
+#    # -----------------------------------------------
+#
+#    # Dog request - child references parent via allOf
+#    # -----------------------------------------------
+#    DogRequestV3:
+#      type: object
+#      description: Request payload for creating a dog
+#      required:
+#        - petType
+#        - name
+#        - breedType
+#        - trained
+#      allOf:
+#        - $ref: '#/components/schemas/PetRequestV3Base'
+#        - type: object
+#          required:
+#            - breedType
+#            - trained
+#          properties:
+#            breedType:
+#              $ref: '#/components/schemas/DogBreedType'
+#            trained:
+#              type: boolean
+#              description: Whether the dog is house trained
+#              examples:
+#                - true
+#            weightKg:
+#              type: number
+#              format: double
+#              minimum: 0.1
+#              maximum: 120.0
+#              description: Weight of the dog in kilograms
+#              examples:
+#                - 30.5
 
     PetResponseV2:
       type: object

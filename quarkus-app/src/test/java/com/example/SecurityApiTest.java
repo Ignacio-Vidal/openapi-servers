@@ -3,33 +3,46 @@ package com.example;
 import com.example.openapi.quarkus.client.api.PermitAllTestApi;
 import com.example.openapi.quarkus.client.api.SecurityTestApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.ws.rs.ForbiddenException;
-import jakarta.ws.rs.NotAuthorizedException;
+import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.quarkus.test.junit.QuarkusTest;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
-import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.internal.ResteasyClientBuilderImpl;
-import org.junit.jupiter.api.BeforeAll;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class SecurityApiTest {
+@QuarkusTest
+class SecurityApiTest extends QuarkusRestClientTestBase {
 
-    static SecurityTestApi api;
-    static SecurityTestApi authenticatedApi;
-    static PermitAllTestApi permitAllApi;
-    static PermitAllTestApi authenticatedPermitAllApi;
+    SecurityTestApi api;
+    SecurityTestApi authenticatedApi;
+    PermitAllTestApi permitAllApi;
+    PermitAllTestApi authenticatedPermitAllApi;
 
-    /** Reads the Keycloak base URL from -Dkeycloak.url or falls back to the value used in generated-requests.http */
-    private static final String KEYCLOAK_URL =
-            System.getProperty("keycloak.url", "http://localhost:9090");
+    /**
+     * The Keycloak token endpoint.
+     *
+     * <p>Under {@code @QuarkusTest} the Keycloak Dev Service starts on a random port (the
+     * {@code %dev.}-scoped {@code quarkus.keycloak.devservices.port=9090} does not apply to the
+     * test profile), so the realm URL is read from the {@code quarkus.oidc.auth-server-url} that
+     * Dev Services injects. {@code -Dkeycloak.url} still overrides it for an external Keycloak.
+     */
+    private static String tokenEndpoint() {
+        String override = System.getProperty("keycloak.url");
+        if (override != null) {
+            return override + "/realms/quarkus/protocol/openid-connect/token";
+        }
+        return ConfigProvider.getConfig()
+                .getValue("quarkus.oidc.auth-server-url", String.class)
+                + "/protocol/openid-connect/token";
+    }
 
     /** JAX-RS filter that attaches a static Bearer token to every request. */
     record BearerTokenFilter(String token) implements ClientRequestFilter {
@@ -51,88 +64,94 @@ class SecurityApiTest {
         form.add("username", "alice");
         form.add("password", "alice");
 
-        ResteasyClient httpClient = new ResteasyClientBuilderImpl().build();
-        String json = httpClient
-                .target(KEYCLOAK_URL + "/realms/quarkus/protocol/openid-connect/token")
-                .request()
-                .post(Entity.form(form), String.class);
+        String endpoint = tokenEndpoint();
+        try (jakarta.ws.rs.client.Client httpClient = jakarta.ws.rs.client.ClientBuilder.newClient()) {
+            String json = httpClient
+                    .target(endpoint)
+                    .request()
+                    .post(Entity.form(form), String.class);
 
-        try {
             return new ObjectMapper().readTree(json).get("access_token").asText();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to obtain JWT from Keycloak at " + KEYCLOAK_URL, e);
+            throw new RuntimeException("Failed to obtain JWT from Keycloak at " + endpoint, e);
         }
     }
 
-    @BeforeAll
-    static void setup() {
-        int port = Integer.parseInt(System.getProperty("quarkus.http.port", "8080"));
-        URI baseUri = URI.create("http://localhost:" + port);
+    /** Cached so the Keycloak token is fetched once per class rather than per test. */
+    private static String cachedToken;
 
-        // Unauthenticated client — no Authorization header
-        ResteasyClient anonClient = new ResteasyClientBuilderImpl().build();
-        api = anonClient.target(baseUri).proxy(SecurityTestApi.class);
-        permitAllApi = anonClient.target(baseUri).proxy(PermitAllTestApi.class);
+    @BeforeEach
+    void setupClients() {
+        // Unauthenticated clients — no Authorization header
+        api = client(SecurityTestApi.class);
+        permitAllApi = client(PermitAllTestApi.class);
 
-        // Authenticated client — every request carries a Bearer token
-        String token = obtainToken();
-        ResteasyClient authClient = new ResteasyClientBuilderImpl()
+        // Authenticated clients — every request carries a Bearer token
+        if (cachedToken == null) {
+            cachedToken = obtainToken();
+        }
+        authenticatedApi = authenticatedClient(SecurityTestApi.class, cachedToken);
+        authenticatedPermitAllApi = authenticatedClient(PermitAllTestApi.class, cachedToken);
+    }
+
+    /** Builds a generated client that attaches a Bearer token to every request. */
+    private <T> T authenticatedClient(Class<T> apiInterface, String token) {
+        return QuarkusRestClientBuilder.newBuilder()
+                .baseUri(baseUri)
                 .register(new BearerTokenFilter(token))
-                .build();
-        authenticatedApi = authClient.target(baseUri).proxy(SecurityTestApi.class);
-        authenticatedPermitAllApi = authClient.target(baseUri).proxy(PermitAllTestApi.class);
+                .build(apiInterface);
     }
 
     // ── Without token: secured endpoints must return 401 ─────────────────────
 
     @Test
     void testAndAllQualify_withoutToken_shouldReturn401() {
-        assertThrows(NotAuthorizedException.class, () -> api.testAndAllQualify());
+        assertFailsWithStatus(401, () -> api.testAndAllQualify());
     }
 
     @Test
     void testApiKey_withoutToken_shouldReturn401() {
-        assertThrows(NotAuthorizedException.class, () -> api.testApiKey());
+        assertFailsWithStatus(401, () -> api.testApiKey());
     }
 
     @Test
     void testHttpBasic_withoutToken_shouldReturn401() {
-        assertThrows(NotAuthorizedException.class, () -> api.testHttpBasic());
+        assertFailsWithStatus(401, () -> api.testHttpBasic());
     }
 
     @Test
     void testHttpBearer_withoutToken_shouldReturn401() {
-        assertThrows(NotAuthorizedException.class, () -> api.testHttpBearer());
+        assertFailsWithStatus(401, () -> api.testHttpBearer());
     }
 
     @Test
     void testMtls_withoutToken_shouldReturn401() {
-        assertThrows(NotAuthorizedException.class, () -> api.testMtls());
+        assertFailsWithStatus(401, () -> api.testMtls());
     }
 
     @Test
     void testOauth2EmptyScopes_withoutToken_shouldReturn401() {
-        assertThrows(NotAuthorizedException.class, () -> api.testOauth2EmptyScopes());
+        assertFailsWithStatus(401, () -> api.testOauth2EmptyScopes());
     }
 
     @Test
     void testOpenIdEmptyScopes_withoutToken_shouldReturn401() {
-        assertThrows(NotAuthorizedException.class, () -> api.testOpenIdEmptyScopes());
+        assertFailsWithStatus(401, () -> api.testOpenIdEmptyScopes());
     }
 
     @Test
     void testOrOneQualifies_withoutToken_shouldReturn401() {
-        assertThrows(NotAuthorizedException.class, () -> api.testOrOneQualifies());
+        assertFailsWithStatus(401, () -> api.testOrOneQualifies());
     }
 
     @Test
     void testOauth2WithScopes_withoutToken_shouldReturn401() {
-        assertThrows(NotAuthorizedException.class, () -> api.testOauth2WithScopes());
+        assertFailsWithStatus(401, () -> api.testOauth2WithScopes());
     }
 
     @Test
     void testAndNotAllQualify_withoutToken_shouldReturn401() {
-        assertThrows(NotAuthorizedException.class, () -> api.testAndNotAllQualify());
+        assertFailsWithStatus(401, () -> api.testAndNotAllQualify());
     }
 
     @Test
@@ -149,7 +168,7 @@ class SecurityApiTest {
 
     @Test
     void testAndNotAllQualify_withToken_shouldReturn403() {
-        assertThrows(ForbiddenException.class, () -> authenticatedApi.testAndNotAllQualify());
+        assertFailsWithStatus(403, () -> authenticatedApi.testAndNotAllQualify());
     }
 
     @Test
@@ -184,7 +203,7 @@ class SecurityApiTest {
 
     @Test
     void testOauth2WithScopes_withToken_shouldReturn403() {
-        assertThrows(ForbiddenException.class, () -> authenticatedApi.testOauth2WithScopes());
+        assertFailsWithStatus(403, () -> authenticatedApi.testOauth2WithScopes());
     }
 
     @Test
@@ -229,7 +248,7 @@ class SecurityApiTest {
 
     @Test
     void testPermitAllInheritsNonEmptyGlobal_withoutToken_shouldReturn401() {
-        assertThrows(NotAuthorizedException.class,
+        assertFailsWithStatus(401,
                 () -> permitAllApi.testPermitAllInheritsNonEmptyGlobal());
     }
 

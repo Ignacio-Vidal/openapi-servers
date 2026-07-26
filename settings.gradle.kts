@@ -15,7 +15,7 @@ pluginManagement {
         mavenLocal()
     }
     plugins {
-        id("io.quarkus") version "3.31.3"
+        id("io.quarkus") version "3.37.2"
     }
 }
 

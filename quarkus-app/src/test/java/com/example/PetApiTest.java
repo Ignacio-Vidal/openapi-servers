@@ -3,34 +3,26 @@ package com.example;
 import com.example.openapi.quarkus.client.api.ApiException;
 import com.example.openapi.quarkus.client.api.PetApi;
 import com.example.openapi.quarkus.client.model.*;
+import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import jakarta.ws.rs.BadRequestException;
-import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.internal.ResteasyClientBuilderImpl;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static java.net.URI.create;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 
 //@Tag("integration")
-class PetApiTest {
+@QuarkusTest
+class PetApiTest extends QuarkusRestClientTestBase {
 
-    static PetApi petsApi;
+    PetApi petsApi;
 
-    @BeforeAll
-    static void setup() {
-        int port = Integer.parseInt(System.getProperty("quarkus.http.port", "8080"));
-        RestAssured.baseURI = "http://localhost";
-        RestAssured.port = port;
-        ResteasyClient client = new ResteasyClientBuilderImpl().build();
-        petsApi = client
-                .target(create("http://localhost:" + port))
-                .proxy(PetApi.class);
+    @BeforeEach
+    void setupClient() {
+        petsApi = client(PetApi.class);
     }
 
     @Test
@@ -55,13 +47,13 @@ class PetApiTest {
         PetRequest request = new CatRequest()
                 .petType(PetRequest.PetTypeEnum.CAT);
 
-        assertThrows(BadRequestException.class, () -> petsApi.createPet(request));
+        assertFailsWithStatus(400, () -> petsApi.createPet(request));
     }
 
     @Test
     void shouldFailForMissingDiscriminator(){
         PetRequest request = new PetRequest();
-        assertThrows(BadRequestException.class, () -> petsApi.createPet(request));
+        assertFailsWithStatus(400, () -> petsApi.createPet(request));
     }
 
     @Test
@@ -122,7 +114,7 @@ class PetApiTest {
     @Test
     void updatePet_withMissingRequiredFields_shouldReturn400() {
         // Missing name, breedType, indoor, ownerEmail — all required fields
-        assertThrows(BadRequestException.class,
+        assertFailsWithStatus(400,
                 () -> petsApi.updatePet(UUID.randomUUID(),
                         new CatRequest().petType(PetRequest.PetTypeEnum.CAT)));
     }
@@ -137,7 +129,7 @@ class PetApiTest {
                 .name("Whiskers")
                 .petType(PetRequest.PetTypeEnum.CAT);
 
-        assertThrows(BadRequestException.class, () -> petsApi.createPet(request));
+        assertFailsWithStatus(400, () -> petsApi.createPet(request));
     }
 
     @Test
@@ -151,7 +143,7 @@ class PetApiTest {
                 .name("Whiskers")
                 .petType(PetRequest.PetTypeEnum.CAT);
 
-        assertThrows(BadRequestException.class, () -> petsApi.createPet(request));
+        assertFailsWithStatus(400, () -> petsApi.createPet(request));
     }
 
     // ── V2: oneOf rendered as interfaces (useOneOfInterfaces) ────────────────
@@ -252,7 +244,7 @@ class PetApiTest {
                 .name("Whiskers")
                 .breedType(CatBreedType.SIAMESE);
 
-        assertThrows(BadRequestException.class, () -> petsApi.createPetV2(request));
+        assertFailsWithStatus(400, () -> petsApi.createPetV2(request));
     }
 
     @Test
@@ -263,7 +255,7 @@ class PetApiTest {
                 .name("Rover")
                 .breedType(DogBreedType.BULLDOG);
 
-        assertThrows(BadRequestException.class, () -> petsApi.createPetV2(request));
+        assertFailsWithStatus(400, () -> petsApi.createPetV2(request));
     }
 
     @Test
@@ -274,7 +266,7 @@ class PetApiTest {
                 .breedType(CatBreedType.SIAMESE)
                 .indoor(true);
 
-        assertThrows(BadRequestException.class, () -> petsApi.createPetV2(request));
+        assertFailsWithStatus(400, () -> petsApi.createPetV2(request));
     }
 
     @Test
@@ -286,7 +278,7 @@ class PetApiTest {
                 .breedType(CatBreedType.SIAMESE)
                 .indoor(true);
 
-        assertThrows(BadRequestException.class, () -> petsApi.createPetV2(request));
+        assertFailsWithStatus(400, () -> petsApi.createPetV2(request));
     }
 
     @Test
@@ -299,7 +291,7 @@ class PetApiTest {
                 .trained(true)
                 .weightKg(200.0);
 
-        assertThrows(BadRequestException.class, () -> petsApi.createPetV2(request));
+        assertFailsWithStatus(400, () -> petsApi.createPetV2(request));
     }
 
     @Test
@@ -312,7 +304,7 @@ class PetApiTest {
                 .trained(true)
                 .weightKg(0.0);
 
-        assertThrows(BadRequestException.class, () -> petsApi.createPetV2(request));
+        assertFailsWithStatus(400, () -> petsApi.createPetV2(request));
     }
 
     // ── V2 raw-JSON: wire-level discriminator handling, independent of the client models ──

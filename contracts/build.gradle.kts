@@ -1,6 +1,6 @@
 plugins {
     id("java-library")
-    id("org.openapi.generator") version "7.24.0"
+    id("org.openapi.generator") version "7.25.0-SNAPSHOT"
     id("org.kordamp.gradle.jandex") version "2.3.0"  // add this
 
 }
@@ -203,6 +203,14 @@ val generateQuarkusClient = tasks.register("generateQuarkusClient", org.openapit
             // which Quarkus picks up natively with quarkus-rest-client
             // Quarkus MicroProfile Rest Client version
             "microprofileRestClientVersion" to "3.0",
+            // Do not generate/register ApiExceptionMapper. It maps every 4xx/5xx to the
+            // generated checked ApiException, which hides the JAX-RS exception hierarchy
+            // (BadRequestException, NotAuthorizedException, ForbiddenException, ...) that
+            // callers would otherwise get. Both flags are needed: `register` controls the
+            // @RegisterProvider on each client interface, `global` controls the @Provider
+            // on the mapper itself, which would still apply it without @RegisterProvider.
+            "microprofileRegisterExceptionMapper" to "false",
+            "microprofileGlobalExceptionMapper" to "false",
             "disableDiscriminatorJsonIgnoreProperties" to "false",
             "dateLibrary" to "java8",
             "useJakartaEe" to "true",
