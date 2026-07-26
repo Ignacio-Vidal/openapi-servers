@@ -36,10 +36,10 @@ public class FileUploadAdapter implements FileUploadApi {
     }
 
     @Override
-    public void uploadSingleFile(FileUpload file, String description) {
+    public void uploadSingleFile(FileUpload fileUpload, String description) {
         lastDescription = description;
-        record(file);
-        LOGGER.infof("uploadSingleFile received 1 file: %s", file.fileName());
+        record(fileUpload);
+        LOGGER.infof("uploadSingleFile received 1 file: %s", fileUpload.fileName());
     }
 
     @Override
@@ -54,13 +54,13 @@ public class FileUploadAdapter implements FileUploadApi {
     }
 
     @Override
-    public void uploadMixed(FileUpload file, List<String> tags, String description) {
+    public void uploadMixed(FileUpload fileUpload, List<String> tags, String description) {
         lastDescription = description;
-        record(file);
+        record(fileUpload);
         // `tags` is a non-file array and must stay a plain List<String>: the binary binding
         // applies only to the file parameter.
         LOGGER.infof("uploadMixed received 1 file: %s with %d tag(s): %s",
-                file.fileName(), tags == null ? 0 : tags.size(), tags);
+                fileUpload.fileName(), tags == null ? 0 : tags.size(), tags);
     }
 
     private void record(FileUpload file) {

@@ -396,9 +396,11 @@ paths:
             schema:
               type: object
               required:
-                - file
+                - fileUpload
               properties:
-                file:
+                # Named `fileUpload` rather than `file`: `file` is a reserved word in the Java
+                # generator (it maps to the File type), so it would be escaped to `_file`.
+                fileUpload:
                   type: string
                   format: binary
                   description: The file to upload
@@ -450,9 +452,9 @@ paths:
             schema:
               type: object
               required:
-                - file
+                - fileUpload
               properties:
-                file:
+                fileUpload:
                   type: string
                   format: binary
                   description: A single file, bound to a scalar
