@@ -61,6 +61,7 @@ val generateQuarkusServer = tasks.register("generateQuarkusServer", org.openapit
             "useJakartaSecurityAnnotations" to "true",
             "useOneOfInterfaces" to "true",
             "useSealed" to "true",
+            "useRecords" to "true",
         )
     )
 }
