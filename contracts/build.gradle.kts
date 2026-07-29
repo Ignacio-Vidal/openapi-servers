@@ -99,6 +99,7 @@ val generateQuarkusServerAlternative = tasks.register("generateQuarkusServerAlte
             // 7.24.0-SNAPSHOT (pr2-jaxrs-usesealed): oneOf schemas render as sealed interfaces.
             "useOneOfInterfaces" to "false",
             "useSealed" to "true",
+            "useRecords" to "true"
         )
     )
 }
