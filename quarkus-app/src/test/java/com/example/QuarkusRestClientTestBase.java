@@ -28,16 +28,41 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 public abstract class QuarkusRestClientTestBase {
 
+    /**
+     * Overrides the server the tests drive, so the suite can be pointed at an already-running
+     * application instead of the one {@code @QuarkusTest} starts.
+     *
+     * <p>This exists to use the tests as a traffic generator against a server you launched
+     * yourself — typically in dev mode under a debugger, where you want to step through the
+     * request. Set it with {@code -Dtest.base-uri=http://localhost:8080}, or use the
+     * {@code testAgainstRunningServer} Gradle task which passes it for you.
+     *
+     * <p>Unset (the default), the tests use the port {@code @QuarkusTest} assigned, which keeps an
+     * ordinary {@code test} run self-contained.
+     *
+     * <p>Every assertion in these tests is made on an HTTP response, so the suite is equally valid
+     * in either mode — pointing it elsewhere changes which server is exercised, not what is checked.
+     */
+    public static final String BASE_URI_PROPERTY = "test.base-uri";
+
     @TestHTTPResource
+    URI injectedBaseUri;
+
+    /** The server under test: the override when one is set, otherwise this run's own server. */
     protected URI baseUri;
 
     @BeforeEach
-    void configureRestAssured() {
+    void resolveBaseUri() {
+        String override = System.getProperty(BASE_URI_PROPERTY);
+        baseUri = (override == null || override.isBlank())
+                ? injectedBaseUri
+                : URI.create(override.trim());
+
         RestAssured.baseURI = baseUri.getScheme() + "://" + baseUri.getHost();
         RestAssured.port = baseUri.getPort();
     }
 
-    /** Builds a generated client interface bound to the running test server. */
+    /** Builds a generated client interface bound to the server under test. */
     protected <T> T client(Class<T> apiInterface) {
         return QuarkusRestClientBuilder.newBuilder()
                 .baseUri(baseUri)

@@ -55,3 +55,44 @@ tasks.named<Test>("test") {
     }
 }
 
+/**
+ * Runs the same tests against an already-running application instead of the server @QuarkusTest
+ * would start, so the suite can be used to generate traffic against a process you control -- e.g.
+ * one launched in dev mode with the debugger attached, to step through a request.
+ *
+ * Start the app first, then:
+ *   ./gradlew :quarkus-app:quarkusDev                       (terminal 1, serves :8080)
+ *   ./gradlew :quarkus-app:testAgainstRunningServer         (terminal 2, drives it)
+ *
+ * Point it elsewhere with -Ptest.baseUri=http://host:port.
+ *
+ * SecurityApiTest also needs `keycloak.url`, and it must be the SAME Keycloak the running server
+ * validates against. Without it the test JVM starts its own Dev Services Keycloak on a random port
+ * and mints tokens there -- a different realm with different signing keys -- so the target server
+ * rejects every token with 401 and each authenticated test fails. Dev mode pins Keycloak to :9090
+ * (`%dev.quarkus.keycloak.devservices.port`), which is the default used here; override with
+ * -Pkeycloak.url=http://host:port when the running app uses a different one.
+ */
+tasks.register<Test>("testAgainstRunningServer") {
+    group = "verification"
+    description = "Runs the tests against an already-running server (default http://localhost:8080)"
+
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    useJUnitPlatform {
+        excludeTags("integration")
+    }
+
+    systemProperty("test.base-uri", providers.gradleProperty("test.baseUri").getOrElse("http://localhost:8080"))
+    systemProperty("keycloak.url", providers.gradleProperty("keycloak.url").getOrElse("http://localhost:9090"))
+
+    // The target server is external, so its state is not reset between runs; never treat a cached
+    // result as valid here.
+    outputs.upToDateWhen { false }
+
+    testLogging {
+        showStandardStreams = true
+    }
+}
+

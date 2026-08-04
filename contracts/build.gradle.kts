@@ -205,6 +205,11 @@ val generateQuarkusClient = tasks.register("generateQuarkusClient", org.openapit
             // which Quarkus picks up natively with quarkus-rest-client
             // Quarkus MicroProfile Rest Client version
             "microprofileRestClientVersion" to "3.0",
+            // Gives each generated client a @RegisterRestClient(configKey=...) derived from its
+            // class name, so it is configured as `quarkus.rest-client.filesink-api.url` rather
+            // than by fully-qualified class name. A single `configKey` cannot be used here
+            // because this contract generates several client interfaces.
+            "configKeyFromClassName" to "true",
             // Do not generate/register ApiExceptionMapper. It maps every 4xx/5xx to the
             // generated checked ApiException, which hides the JAX-RS exception hierarchy
             // (BadRequestException, NotAuthorizedException, ForbiddenException, ...) that

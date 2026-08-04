@@ -13,6 +13,8 @@ tags:
     description: One endpoint per @PermitAll edge case from PR 23782
   - name: FileUpload
     description: Single and multiple multipart/form-data file uploads
+  - name: FileSink
+    description: Downstream receiver that forwarded uploads are relayed to
 
 # Global security: enables Rules B, C, E from PR 23782 to be exercised by
 # endpoints below. Pre-existing endpoints opt out explicitly with security: [].
@@ -470,8 +472,74 @@ paths:
         '202':
           description: Upload accepted
 
+  # -----------------------------------------------
+  # Downstream sink. Stands in for a separate service: the /uploads/* endpoints
+  # forward to this path through the GENERATED CLIENT, so a request exercises
+  # server-side binding and client-side multipart encoding in one hop.
+  #
+  # It returns a receipt rather than a bare 202 so tests can assert the bytes
+  # survived the hop, instead of only that a status code came back.
+  # -----------------------------------------------
+  /api/v1/files/sink:
+    post:
+      operationId: sinkFiles
+      tags: [FileSink]
+      summary: "Terminal receiver for forwarded uploads; echoes back what it received"
+      security: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  description: The forwarded files, all sharing the `files` part name
+                  items:
+                    type: string
+                    format: binary
+                description:
+                  type: string
+                  description: Free-text description carried over from the original upload
+      responses:
+        '200':
+          description: Files received
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SinkReceipt'
+
 components:
   schemas:
+    SinkReceipt:
+      type: object
+      description: What the downstream sink actually received, echoed back for assertions
+      required:
+        - fileNames
+        - contents
+        - totalBytes
+      properties:
+        fileNames:
+          type: array
+          description: Submitted file name of each part, in the order received
+          items:
+            type: string
+        contents:
+          type: array
+          description: Body of each received file, so a test can prove the bytes survived the hop
+          items:
+            type: string
+        totalBytes:
+          type: integer
+          format: int64
+          description: Sum of the received file sizes
+        description:
+          type: string
+          description: The description carried over from the original upload
+
     PetType:
       type: string
       enum:
