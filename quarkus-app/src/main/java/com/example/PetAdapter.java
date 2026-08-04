@@ -40,26 +40,32 @@ public class PetAdapter implements PetApi{
 
     @Override
     public PetResponseV2 createPetV2(PetRequestV2 petRequestV2) {
-        // PetRequestV2 is a sealed interface permitting only the CatRequestV2/DogRequestV2 records,
-        // so this switch is exhaustive without a default branch. The record patterns deconstruct the
-        // request to reuse the submitted name, and the immutable responses are built through their
-        // canonical constructors rather than the fluent setters used by the V1 classes.
+        // PetRequestV2 is a sealed interface permitting only CatRequestV2/DogRequestV2, so this
+        // switch is exhaustive without a default branch.
+        //
+        // TEMPORARY: this method previously used record deconstruction patterns, which require
+        // `useRecords`. That option lives on the still-unmerged PR #24188, so against upstream
+        // master the V2 models generate as classes and the patterns do not compile. Reverted to
+        // type patterns + the all-args constructor for the duration of the file-upload testing;
+        // restore from the stash once useRecords is available again.
         return switch (petRequestV2) {
-            case CatRequestV2(PetType petType, String name, var breedType, var indoor, var declawed) ->
+            // The generated constructor covers only the required properties; the optional ones
+            // (declawed / weightKg) are applied through the fluent setters.
+            case CatRequestV2 cat ->
                     new CatResponseV2(
-                            petType,
-                            name,
-                            breedType,
-                            indoor,
-                            declawed,
-                            BigDecimal.valueOf(30));
-            case DogRequestV2(PetType petType, String name, var breedType, var trained, var weightKg) ->
+                            cat.getPetType(),
+                            cat.getName(),
+                            cat.getBreedType(),
+                            cat.getIndoor(),
+                            BigDecimal.valueOf(30))
+                            .declawed(cat.getDeclawed());
+            case DogRequestV2 dog ->
                     new DogResponseV2(
-                            petType,
-                            name,
-                            breedType,
-                            trained,
-                            weightKg);
+                            dog.getPetType(),
+                            dog.getName(),
+                            dog.getBreedType(),
+                            dog.getTrained())
+                            .weightKg(dog.getWeightKg());
         };
     }
 
