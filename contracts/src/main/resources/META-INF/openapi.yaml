@@ -44,6 +44,7 @@ paths:
                   name: "Whiskers"
                   indoor: true
                   breedType: DOMESTIC_SHORTHAIR
+                  ownerEmail: owner@example.com
               dog:
                 summary: Dog request
                 value:
@@ -67,6 +68,7 @@ paths:
                     name: "Whiskers"
                     indoor: true
                     breedType: DOMESTIC_SHORTHAIR
+                    age: 3.5
                     createdAt: "2024-02-01T10:30:00Z"
                 dog:
                   summary: Dog response
@@ -122,6 +124,7 @@ paths:
                     name: "Whiskers"
                     indoor: true
                     breedType: DOMESTIC_SHORTHAIR
+                    age: 3.5
                     createdAt: "2024-02-01T10:30:00Z"
                 dog:
                   summary: Dog response
@@ -207,6 +210,24 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PetRequest'
+            examples:
+              cat:
+                summary: Cat update
+                value:
+                  petType: CAT
+                  name: "Whiskers"
+                  indoor: false
+                  breedType: MAINE_COON
+                  declawed: false
+                  ownerEmail: owner@example.com
+              dog:
+                summary: Dog update
+                value:
+                  petType: DOG
+                  name: "Buddy"
+                  breedType: GOLDEN_RETRIEVER
+                  trained: true
+                  weightKg: 30.5
       responses:
         '204':
           description: Pet updated successfully
@@ -409,6 +430,16 @@ paths:
                 description:
                   type: string
                   description: Free-text description of the upload
+            examples:
+              withDescription:
+                summary: A file sent with a description
+                value:
+                  fileUpload: "hello from a single upload"
+                  description: "A short text file"
+              fileOnly:
+                summary: Only the required file part
+                value:
+                  fileUpload: "hello from a single upload"
       responses:
         '202':
           description: Upload accepted
@@ -437,6 +468,19 @@ paths:
                 description:
                   type: string
                   description: Free-text description of the upload
+            examples:
+              twoFiles:
+                summary: Two files sharing the `files` part name
+                value:
+                  files:
+                    - "contents of the first file"
+                    - "contents of the second file"
+                  description: "A batch of two text files"
+              singleFile:
+                summary: A one-element array, which still binds to the list
+                value:
+                  files:
+                    - "contents of the only file"
       responses:
         '202':
           description: Uploads accepted
@@ -468,6 +512,19 @@ paths:
                 description:
                   type: string
                   description: Free-text description of the upload
+            examples:
+              fileWithTags:
+                summary: A single file alongside a plain string array
+                value:
+                  fileUpload: "contents of the uploaded file"
+                  tags:
+                    - "holiday"
+                    - "2024"
+                  description: "A file with two tags"
+              fileWithoutTags:
+                summary: The non-file array omitted entirely
+                value:
+                  fileUpload: "contents of the uploaded file"
       responses:
         '202':
           description: Upload accepted
@@ -504,6 +561,14 @@ paths:
                 description:
                   type: string
                   description: Free-text description carried over from the original upload
+            examples:
+              forwardedBatch:
+                summary: Two forwarded files with the description carried over
+                value:
+                  files:
+                    - "contents of the first file"
+                    - "contents of the second file"
+                  description: "A batch of two text files"
       responses:
         '200':
           description: Files received
@@ -511,6 +576,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SinkReceipt'
+              examples:
+                forwardedBatch:
+                  summary: Receipt for the two forwarded files above
+                  value:
+                    fileNames:
+                      - "first.txt"
+                      - "second.txt"
+                    contents:
+                      - "contents of the first file"
+                      - "contents of the second file"
+                    totalBytes: 53
+                    description: "A batch of two text files"
 
 components:
   schemas:
