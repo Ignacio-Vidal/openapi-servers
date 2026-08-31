@@ -1,0 +1,25 @@
+openapi: 3.0.3
+info:
+  title: Pet Service 4
+  version: 1.0.0
+paths:
+  /pets/create:
+    post:
+      operationId: createPet
+      summary: Creates a pet and returns it
+      responses:
+        "200":
+          description: the created pet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        name:
+          type: string
+        species:
+          type: string

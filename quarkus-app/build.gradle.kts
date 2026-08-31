@@ -12,6 +12,9 @@ dependencies {
     implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.35.3"))
     implementation(project(":contracts"))
     implementation("io.quarkus:quarkus-oidc")
+    // OIDC client: acquires the JWT this app attaches to its own downstream calls
+    // (client-credentials grant), and refreshes it in the background off the request path.
+    implementation("io.quarkus:quarkus-oidc-client")
     testImplementation("io.quarkus:quarkus-test-security")
     implementation("io.quarkus:quarkus-arc")
     implementation("io.quarkus:quarkus-rest")
@@ -30,6 +33,7 @@ dependencies {
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-junit-mockito")
     testImplementation("io.rest-assured:rest-assured")
+    testImplementation("org.assertj:assertj-core:3.27.6")
     testImplementation("org.eclipse.microprofile.rest.client:microprofile-rest-client-api:3.0")
 
 }

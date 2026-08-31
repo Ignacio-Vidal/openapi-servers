@@ -10,6 +10,13 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/contracts" />
             <option value="$PROJECT_DIR$/performance-test" />
+            <option value="$PROJECT_DIR$/pet-common" />
+            <option value="$PROJECT_DIR$/pet-service-1" />
+            <option value="$PROJECT_DIR$/pet-service-2" />
+            <option value="$PROJECT_DIR$/pet-service-3" />
+            <option value="$PROJECT_DIR$/pet-service-4" />
+            <option value="$PROJECT_DIR$/pet-service-5" />
+            <option value="$PROJECT_DIR$/pet-service-6" />
             <option value="$PROJECT_DIR$/quarkus-app" />
           </set>
         </option>
