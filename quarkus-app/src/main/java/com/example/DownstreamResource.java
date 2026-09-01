@@ -47,14 +47,18 @@ public class DownstreamResource {
     }
 
     private final OidcClientTokenFilter tokenFilter;
+    private final ScheduledTokenFilter scheduledTokenFilter;
     private final int httpPort;
 
     private SecuredDownstreamApi downstreamClient;
+    private SecuredDownstreamApi scheduledDownstreamClient;
 
     @Inject
     public DownstreamResource(OidcClientTokenFilter tokenFilter,
+                              ScheduledTokenFilter scheduledTokenFilter,
                               @ConfigProperty(name = "quarkus.http.port") int httpPort) {
         this.tokenFilter = tokenFilter;
+        this.scheduledTokenFilter = scheduledTokenFilter;
         this.httpPort = httpPort;
     }
 
@@ -65,6 +69,11 @@ public class DownstreamResource {
         downstreamClient = QuarkusRestClientBuilder.newBuilder()
                 .baseUri(URI.create("http://localhost:" + httpPort))
                 .register(tokenFilter)
+                .build(SecuredDownstreamApi.class);
+
+        scheduledDownstreamClient = QuarkusRestClientBuilder.newBuilder()
+                .baseUri(URI.create("http://localhost:" + httpPort))
+                .register(scheduledTokenFilter)
                 .build(SecuredDownstreamApi.class);
     }
 
@@ -91,6 +100,27 @@ public class DownstreamResource {
                 "downstreamCallMicros", elapsedMicros,
                 // Just the token attach -- the number that must stay flat across token expiry.
                 "tokenAttachMicros", tokenFilter.lastAttachMicros(),
+                "downstream", downstream);
+    }
+
+    /**
+     * Same relay, but taking its token from {@link ScheduledTokenCache} instead of Quarkus' cache.
+     *
+     * <p>Reading the token here is a volatile field read, so it cannot block on a refresh in
+     * flight — which is the one thing /downstream/relay cannot promise.
+     */
+    @GET
+    @Path("/relay-scheduled")
+    @PermitAll
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> relayScheduled() {
+        long startNanos = System.nanoTime();
+        Map<String, Object> downstream = scheduledDownstreamClient.secured();
+        long elapsedMicros = (System.nanoTime() - startNanos) / 1_000;
+
+        return Map.of(
+                "downstreamCallMicros", elapsedMicros,
+                "tokenAttachMicros", scheduledTokenFilter.lastAttachMicros(),
                 "downstream", downstream);
     }
 

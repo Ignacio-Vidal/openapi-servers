@@ -81,16 +81,19 @@ public class OidcClientTokenFilter implements ClientRequestFilter {
     /**
      * Time in microseconds that the most recent call spent obtaining the token.
      *
-     * <p>Exposed so tests (and the /downstream/relay endpoint) can assert on what the request path
-     * actually paid, rather than on a measurement taken from a test thread. A test that calls the
+     * <p>Held in a {@link ThreadLocal} rather than a shared field so that concurrent requests each
+     * read back their own measurement; a shared field would let one request report another's
+     * timing. Exposed so tests (and the /downstream/relay endpoint) can assert on what the request
+     * path actually paid, rather than on a measurement taken from a test thread. A test that calls the
      * token provider directly in a tight loop measures itself: the periodic timer and the caller
      * share one token cache, so whichever notices the token is stale first performs the refresh,
      * and a fast-polling test will frequently beat the timer to it.
      */
-    private volatile long lastAttachMicros = -1;
+    private static final ThreadLocal<Long> LAST_ATTACH_MICROS = new ThreadLocal<>();
 
     public long lastAttachMicros() {
-        return lastAttachMicros;
+        Long value = LAST_ATTACH_MICROS.get();
+        return value == null ? -1 : value;
     }
 
     @Override
@@ -101,7 +104,7 @@ public class OidcClientTokenFilter implements ClientRequestFilter {
                 .await().atMost(TOKEN_TIMEOUT);
 
         long elapsedMicros = (System.nanoTime() - startNanos) / 1_000;
-        lastAttachMicros = elapsedMicros;
+        LAST_ATTACH_MICROS.set(elapsedMicros);
 
         requestContext.getHeaders().putSingle(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
 

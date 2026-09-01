@@ -15,6 +15,9 @@ dependencies {
     // OIDC client: acquires the JWT this app attaches to its own downstream calls
     // (client-credentials grant), and refreshes it in the background off the request path.
     implementation("io.quarkus:quarkus-oidc-client")
+    // @Scheduled, used by ScheduledTokenCache to refresh the access token on a fixed tick
+    // entirely off the request path.
+    implementation("io.quarkus:quarkus-scheduler")
     testImplementation("io.quarkus:quarkus-test-security")
     implementation("io.quarkus:quarkus-arc")
     implementation("io.quarkus:quarkus-rest")
@@ -54,7 +57,12 @@ tasks.withType<JavaCompile> {
 tasks.named<Test>("test") {
     doFirst {
         useJUnitPlatform {
-            excludeTags("integration")
+            // -PincludeIntegration=true opts the @Tag("integration") tests back in. They are
+            // excluded by default because the load-generating ones exhaust ephemeral ports and
+            // break any test that runs after them in the same JVM.
+            if (!((findProperty("includeIntegration") as String?)?.toBoolean() ?: false)) {
+                excludeTags("integration")
+            }
         }
     }
 }
