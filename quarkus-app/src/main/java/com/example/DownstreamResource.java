@@ -87,7 +87,10 @@ public class DownstreamResource {
         LOG.infof("Relayed to downstream in %d us", elapsedMicros);
 
         return Map.of(
+                // Whole downstream hop, including the loopback HTTP call itself.
                 "downstreamCallMicros", elapsedMicros,
+                // Just the token attach -- the number that must stay flat across token expiry.
+                "tokenAttachMicros", tokenFilter.lastAttachMicros(),
                 "downstream", downstream);
     }
 

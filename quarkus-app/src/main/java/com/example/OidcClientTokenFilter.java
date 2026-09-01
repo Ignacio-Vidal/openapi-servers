@@ -2,6 +2,7 @@ package com.example;
 
 import io.quarkus.oidc.client.spi.TokenProvider;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
@@ -33,6 +34,18 @@ import java.time.Duration;
  *
  * <p>Registered explicitly per-client via {@code QuarkusRestClientBuilder.register(...)} rather
  * than with {@code @Provider}, so that only the downstream calls that need the token carry it.
+ *
+ * <p><strong>Do not force this bean to be created eagerly at startup.</strong> It is tempting to
+ * add an {@code @Startup} bean that resolves a token up front so the first request does not pay
+ * for it. Doing so silently disables the background refresh entirely. The periodic task is
+ * registered from {@code AbstractTokensProducer#init()}, which only schedules a timer when the
+ * resolved client is an {@code OidcClientImpl}; if the producer is created before OIDC discovery
+ * has completed, the client is still a {@code DeferredOidcClient}, the {@code instanceof} guard in
+ * {@code OidcClientsImpl#registerTokenRefresh} does not match, and no timer is ever scheduled.
+ * There is no warning when this happens -- refresh just quietly reverts to the request path. This
+ * was observed and measured here: with an eager warmup bean, refreshes ran on the caller's thread
+ * and token reads spiked to ~27ms on every expiry; without it they run on a Vert.x event loop and
+ * reads stay in the hundreds of microseconds.
  */
 @ApplicationScoped
 public class OidcClientTokenFilter implements ClientRequestFilter {
@@ -47,21 +60,48 @@ public class OidcClientTokenFilter implements ClientRequestFilter {
      */
     private static final Duration TOKEN_TIMEOUT = Duration.ofSeconds(10);
 
-    private final TokenProvider tokenProvider;
+    /**
+     * Resolved lazily, per call, and deliberately so.
+     *
+     * <p>Holding a {@code TokenProvider} directly would force the underlying token producer to be
+     * created as soon as this filter is constructed -- which happens at application start, because
+     * DownstreamResource injects this filter from its own {@code @PostConstruct}. Creating the
+     * producer that early is exactly the failure described above: OIDC discovery has not finished,
+     * the client is still a {@code DeferredOidcClient}, and the background refresh timer is never
+     * scheduled. Going through {@link Instance} defers that to the first actual request, by which
+     * point discovery has completed and the timer is scheduled correctly.
+     */
+    private final Instance<TokenProvider> tokenProvider;
 
     @Inject
-    public OidcClientTokenFilter(TokenProvider tokenProvider) {
+    public OidcClientTokenFilter(Instance<TokenProvider> tokenProvider) {
         this.tokenProvider = tokenProvider;
+    }
+
+    /**
+     * Time in microseconds that the most recent call spent obtaining the token.
+     *
+     * <p>Exposed so tests (and the /downstream/relay endpoint) can assert on what the request path
+     * actually paid, rather than on a measurement taken from a test thread. A test that calls the
+     * token provider directly in a tight loop measures itself: the periodic timer and the caller
+     * share one token cache, so whichever notices the token is stale first performs the refresh,
+     * and a fast-polling test will frequently beat the timer to it.
+     */
+    private volatile long lastAttachMicros = -1;
+
+    public long lastAttachMicros() {
+        return lastAttachMicros;
     }
 
     @Override
     public void filter(ClientRequestContext requestContext) {
         long startNanos = System.nanoTime();
 
-        String accessToken = tokenProvider.getAccessToken()
+        String accessToken = tokenProvider.get().getAccessToken()
                 .await().atMost(TOKEN_TIMEOUT);
 
         long elapsedMicros = (System.nanoTime() - startNanos) / 1_000;
+        lastAttachMicros = elapsedMicros;
 
         requestContext.getHeaders().putSingle(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
 
